@@ -1,9 +1,9 @@
-package com.opens.datadictionary.config.service;
+package com.opens.datadictionary.service;
 
 import org.springframework.core.io.Resource;
 import org.springframework.web.multipart.MultipartFile;
 
-public interface StorageService {
+public interface SwaggerFileService {
 
 	public Resource loadFile(String filename);
 

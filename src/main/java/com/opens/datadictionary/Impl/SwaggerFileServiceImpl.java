@@ -1,4 +1,4 @@
-package com.opens.datadictionary.config.Impl;
+package com.opens.datadictionary.Impl;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -21,17 +21,20 @@ import org.springframework.core.io.UrlResource;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.opens.datadictionary.config.exceptions.GenericException;
-import com.opens.datadictionary.config.service.StorageService;
+import com.opens.datadictionary.exceptions.GenericException;
+import com.opens.datadictionary.exceptions.InvalidSwaggerFileException;
 import com.opens.datadictionary.mongo.repository.CommonService;
+import com.opens.datadictionary.service.SolrIndexService;
+import com.opens.datadictionary.service.SwaggerFileService;
+import com.opens.datadictionary.solr.models.SolrDocumentDto;
 
 import io.swagger.models.Swagger;
 import io.swagger.parser.SwaggerParser;
 
 @Service
-public class StorageServiceImpl implements StorageService {
+public class SwaggerFileServiceImpl implements SwaggerFileService {
 
-	Logger log = LoggerFactory.getLogger(this.getClass().getName());
+	private static final Logger logger = LoggerFactory.getLogger(SwaggerFileServiceImpl.class);
 
 	@Autowired
 	private CommonService commonService;
@@ -41,20 +44,27 @@ public class StorageServiceImpl implements StorageService {
 	@Autowired
 	private SwaggerParser swaggerParser;
 
+	@Autowired
+	private SolrIndexService solrIndexService;
+
 	@Override
 	public void store(MultipartFile file) {
 		try {
 			if (file != null) {
 				String fileName = System.currentTimeMillis() + "-" + file.getOriginalFilename();
 				Files.copy(file.getInputStream(), this.rootLocation.resolve(fileName));
+
+				Swagger swagger = validateValidSwaggerFile(getSwaggerDataFromFile(file.getInputStream()));
+
+				SolrDocumentDto solrDocumentDto = solrIndexService.transform(swagger);
+
 				// Saving to mongo database
 				Map<String, String> metaData = new HashMap<String, String>();
 				metaData.put("fileName", fileName);
-				
-				Swagger swagger = validateValidSwaggerFile(this.rootLocation.resolve(fileName).toAbsolutePath().toString());
-				
+
+				// Saving file to mongo database
 				commonService.storeImage(file.getInputStream(), fileName, metaData);
-				log.info("File stored successfully = {} File name = {} ", metaData, fileName);
+				logger.info("File stored successfully = {} File name = {} ", metaData, fileName);
 			}
 		} catch (Exception e) {
 			throw new GenericException("FAILED TO LOAD swagger file.");
@@ -62,10 +72,21 @@ public class StorageServiceImpl implements StorageService {
 
 	}
 
-	
-	public Swagger validateValidSwaggerFile(String location){
-		return swaggerParser.read(location);
+	public Swagger validateValidSwaggerFile(String content) {
+		try {
+			return swaggerParser.parse(content);
+		} catch (Exception e) {
+			logger.error("Exception occured while parsing swagger file content = {} ", e);
+			throw new InvalidSwaggerFileException("Invalid swagger file");
+		}
 	}
+
+	/**
+	 * This method will read swagger file content and print it in logs
+	 * 
+	 * @param input
+	 * @return
+	 */
 	public String getSwaggerDataFromFile(InputStream input) {
 		StringBuilder fileContent = new StringBuilder();
 		BufferedReader reader = null;
@@ -75,14 +96,16 @@ public class StorageServiceImpl implements StorageService {
 			while ((line = reader.readLine()) != null) {
 				fileContent.append(line);
 			}
+			logger.info("Swagger file content = {} ", fileContent.toString());
 		} catch (Exception e) {
-			// TODO
+			logger.error("Exception occured while reading file = {} ", e);
+			throw new InvalidSwaggerFileException("Invalid swagger file");
 		} finally {
 			if (reader != null) {
 				try {
 					reader.close();
 				} catch (IOException e) {
-					// TODO
+					logger.error("Exception occured while closing file = {} ", e);
 				}
 			}
 		}
@@ -96,10 +119,10 @@ public class StorageServiceImpl implements StorageService {
 			if (resource.exists() || resource.isReadable()) {
 				return resource;
 			} else {
-				throw new GenericException("FAILED TO LOAD IMAGES.");
+				throw new GenericException("FAILED TO LOAD SWAGGER FILE.");
 			}
 		} catch (MalformedURLException e) {
-			throw new GenericException("FAILED TO LOAD IMAGES.");
+			throw new GenericException("FAILED TO LOAD SWAGGER FILE.");
 		}
 	}
 
@@ -110,7 +133,7 @@ public class StorageServiceImpl implements StorageService {
 				Files.createDirectory(rootLocation);
 			}
 		} catch (IOException e) {
-			log.error("Directory already exists = {} ", e);
+			logger.error("Directory already exists = {} ", e);
 		}
 	}
 

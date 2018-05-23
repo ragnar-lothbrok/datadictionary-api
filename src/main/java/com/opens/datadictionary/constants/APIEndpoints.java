@@ -1,4 +1,4 @@
-package com.opens.datadictionary.config.constants;
+package com.opens.datadictionary.constants;
 
 public interface APIEndpoints {
 

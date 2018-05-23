@@ -1,4 +1,4 @@
-package com.opens.datadictionary.config.controller;
+package com.opens.datadictionary.controller;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -12,16 +12,16 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.opens.datadictionary.config.service.StorageService;
+import com.opens.datadictionary.service.SwaggerFileService;
 
 @RestController
-@RequestMapping(com.opens.datadictionary.config.constants.APIEndpoints.UPLOAD_BASE_URL)
+@RequestMapping(com.opens.datadictionary.constants.APIEndpoints.UPLOAD_BASE_URL)
 public class SwaggerUploadController {
 
 	private final static Logger LOGGER = LoggerFactory.getLogger(SwaggerUploadController.class);
 
 	@Autowired
-	private StorageService storageService;
+	private SwaggerFileService storageService;
 
 	@RequestMapping(method = RequestMethod.POST)
 	public void uploadSwagger(@RequestParam("file") MultipartFile file, HttpServletRequest request,
