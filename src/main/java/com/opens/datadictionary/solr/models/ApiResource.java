@@ -4,7 +4,9 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ApiResource implements Serializable {
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+public class ApiResource implements Serializable, Cloneable {
 
 	private static final long serialVersionUID = 1L;
 
@@ -15,14 +17,37 @@ public class ApiResource implements Serializable {
 	private String description;
 	private String operationId;
 
-	private List<ParamDetails> params = new ArrayList<>();
+	@JsonIgnore
+	private List<ParamDetails> paramDetails = new ArrayList<ParamDetails>();
 
-	public List<ParamDetails> getParams() {
-		return params;
+	public ApiResource() {
+
 	}
 
-	public void setParams(List<ParamDetails> params) {
-		this.params = params;
+	public ApiResource(String resourceUrl, String methodName, List<String> tags, String summary, String description,
+			String operationId) {
+		super();
+		this.resourceUrl = resourceUrl;
+		this.methodName = methodName;
+		this.tags = tags;
+		this.summary = summary;
+		this.description = description;
+		this.operationId = operationId;
+	}
+
+	@Override
+	public ApiResource clone()  {
+		ApiResource apiResource =  new ApiResource(resourceUrl, methodName, tags, summary, description, operationId);
+		apiResource.setParamDetails(null);
+		return apiResource;
+	}
+
+	public List<ParamDetails> getParamDetails() {
+		return paramDetails;
+	}
+
+	public void setParamDetails(List<ParamDetails> paramDetails) {
+		this.paramDetails = paramDetails;
 	}
 
 	public String getResourceUrl() {

@@ -1,8 +1,6 @@
 package com.opens.datadictionary.solr.models;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
 
 public class ParamDetails implements Serializable {
 
@@ -17,8 +15,6 @@ public class ParamDetails implements Serializable {
 	private boolean required;
 
 	private String paramjavaType;
-
-	List<ParamDetails> postParamDetails = new ArrayList<>();
 
 	public String getName() {
 		return name;
@@ -58,14 +54,6 @@ public class ParamDetails implements Serializable {
 
 	public void setParamjavaType(String paramjavaType) {
 		this.paramjavaType = paramjavaType;
-	}
-
-	public List<ParamDetails> getPostParamDetails() {
-		return postParamDetails;
-	}
-
-	public void setPostParamDetails(List<ParamDetails> postParamDetails) {
-		this.postParamDetails = postParamDetails;
 	}
 
 }

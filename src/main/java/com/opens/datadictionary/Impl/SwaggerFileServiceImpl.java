@@ -8,8 +8,8 @@ import java.net.MalformedURLException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.List;
+import java.util.UUID;
 
 import javax.annotation.PostConstruct;
 
@@ -23,6 +23,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.opens.datadictionary.exceptions.GenericException;
 import com.opens.datadictionary.exceptions.InvalidSwaggerFileException;
+import com.opens.datadictionary.mongo.models.SwaggerDetail;
 import com.opens.datadictionary.mongo.repository.CommonService;
 import com.opens.datadictionary.service.SolrIndexService;
 import com.opens.datadictionary.service.SwaggerFileService;
@@ -54,17 +55,19 @@ public class SwaggerFileServiceImpl implements SwaggerFileService {
 				String fileName = System.currentTimeMillis() + "-" + file.getOriginalFilename();
 				Files.copy(file.getInputStream(), this.rootLocation.resolve(fileName));
 
-				Swagger swagger = validateValidSwaggerFile(getSwaggerDataFromFile(file.getInputStream()));
+				String swaggerContent = getSwaggerDataFromFile(file.getInputStream());
 
-				SolrDocumentDto solrDocumentDto = solrIndexService.transform(swagger);
-
-				// Saving to mongo database
-				Map<String, String> metaData = new HashMap<String, String>();
-				metaData.put("fileName", fileName);
+				Swagger swagger = validateValidSwaggerFile(swaggerContent);
 
 				// Saving file to mongo database
-				commonService.storeImage(file.getInputStream(), fileName, metaData);
-				logger.info("File stored successfully = {} File name = {} ", metaData, fileName);
+				SwaggerDetail swaggerDetail = new SwaggerDetail(UUID.randomUUID().toString(), fileName, swaggerContent);
+				// commonService.save(swaggerDetail);
+
+				List<SolrDocumentDto> solrDocumentDtos = solrIndexService.transform(swagger, swaggerDetail.getId());
+
+				solrIndexService.indexDocuments(solrDocumentDtos);
+
+				logger.info("Content saved for file = {} ", fileName);
 			}
 		} catch (Exception e) {
 			throw new GenericException("FAILED TO LOAD swagger file.");

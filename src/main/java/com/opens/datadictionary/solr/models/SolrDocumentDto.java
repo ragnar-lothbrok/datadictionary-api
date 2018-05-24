@@ -1,10 +1,8 @@
 package com.opens.datadictionary.solr.models;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
 
-public class SolrDocumentDto implements Serializable {
+public class SolrDocumentDto implements Serializable, Cloneable {
 
 	private static final long serialVersionUID = 1L;
 
@@ -16,10 +14,30 @@ public class SolrDocumentDto implements Serializable {
 	private String description;
 
 	private String baseUrl;
-	
+
 	private String host;
 
-	List<ApiResource> apiResources = new ArrayList<ApiResource>();
+	ApiResource apiResource;
+
+	ParamDetails paramDetails;
+
+	public SolrDocumentDto() {
+
+	}
+
+	@Override
+	public SolrDocumentDto clone() {
+		return new SolrDocumentDto(id, title, description, baseUrl, host);
+	}
+
+	public SolrDocumentDto(String id, String title, String description, String baseUrl, String host) {
+		super();
+		this.id = id;
+		this.title = title;
+		this.description = description;
+		this.baseUrl = baseUrl;
+		this.host = host;
+	}
 
 	public String getId() {
 		return id;
@@ -61,12 +79,20 @@ public class SolrDocumentDto implements Serializable {
 		this.baseUrl = baseUrl;
 	}
 
-	public List<ApiResource> getApiResources() {
-		return apiResources;
+	public ApiResource getApiResource() {
+		return apiResource;
 	}
 
-	public void setApiResources(List<ApiResource> apiResources) {
-		this.apiResources = apiResources;
+	public void setApiResource(ApiResource apiResource) {
+		this.apiResource = apiResource;
+	}
+
+	public ParamDetails getParamDetails() {
+		return paramDetails;
+	}
+
+	public void setParamDetails(ParamDetails paramDetails) {
+		this.paramDetails = paramDetails;
 	}
 
 }
