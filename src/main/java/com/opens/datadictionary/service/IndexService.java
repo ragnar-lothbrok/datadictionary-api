@@ -6,7 +6,7 @@ import com.opens.datadictionary.solr.models.SolrDocumentDto;
 
 import io.swagger.models.Swagger;
 
-public interface SolrIndexService {
+public interface IndexService {
 
 	List<SolrDocumentDto> transform(Swagger swagger, String docId, String fileName);
 

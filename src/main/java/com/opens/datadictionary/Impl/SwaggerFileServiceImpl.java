@@ -8,7 +8,10 @@ import java.net.MalformedURLException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.UUID;
 
 import javax.annotation.PostConstruct;
@@ -21,12 +24,17 @@ import org.springframework.core.io.UrlResource;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.opens.datadictionary.constants.APIEndpoints;
 import com.opens.datadictionary.exceptions.GenericException;
 import com.opens.datadictionary.exceptions.InvalidSwaggerFileException;
 import com.opens.datadictionary.mongo.models.SwaggerDetail;
 import com.opens.datadictionary.mongo.repository.CommonService;
-import com.opens.datadictionary.service.SolrIndexService;
+import com.opens.datadictionary.service.IndexService;
+import com.opens.datadictionary.service.SearchService;
 import com.opens.datadictionary.service.SwaggerFileService;
+import com.opens.datadictionary.solr.dtos.SearchRequest;
 import com.opens.datadictionary.solr.models.SolrDocumentDto;
 
 import io.swagger.models.Swagger;
@@ -37,6 +45,7 @@ public class SwaggerFileServiceImpl implements SwaggerFileService {
 
 	private static final Logger logger = LoggerFactory.getLogger(SwaggerFileServiceImpl.class);
 
+	@SuppressWarnings("unused")
 	@Autowired
 	private CommonService commonService;
 
@@ -46,7 +55,10 @@ public class SwaggerFileServiceImpl implements SwaggerFileService {
 	private SwaggerParser swaggerParser;
 
 	@Autowired
-	private SolrIndexService solrIndexService;
+	private IndexService solrIndexService;
+
+	@Autowired
+	private SearchService solrSearchService;
 
 	@Override
 	public void store(MultipartFile file) {
@@ -56,7 +68,7 @@ public class SwaggerFileServiceImpl implements SwaggerFileService {
 				String fileName = uuid + "-" + file.getOriginalFilename();
 				Files.copy(file.getInputStream(), this.rootLocation.resolve(fileName));
 
-				String swaggerContent = getSwaggerDataFromFile(file.getInputStream());
+				String swaggerContent = getDataFromFile(file.getInputStream());
 
 				Swagger swagger = validateValidSwaggerFile(swaggerContent);
 
@@ -64,7 +76,8 @@ public class SwaggerFileServiceImpl implements SwaggerFileService {
 				SwaggerDetail swaggerDetail = new SwaggerDetail(UUID.randomUUID().toString(), fileName, swaggerContent);
 				// commonService.save(swaggerDetail);
 
-				List<SolrDocumentDto> solrDocumentDtos = solrIndexService.transform(swagger, swaggerDetail.getId(), fileName);
+				List<SolrDocumentDto> solrDocumentDtos = solrIndexService.transform(swagger, swaggerDetail.getId(),
+						fileName);
 
 				solrIndexService.indexDocuments(solrDocumentDtos);
 
@@ -91,7 +104,7 @@ public class SwaggerFileServiceImpl implements SwaggerFileService {
 	 * @param input
 	 * @return
 	 */
-	public String getSwaggerDataFromFile(InputStream input) {
+	public String getDataFromFile(InputStream input) {
 		StringBuilder fileContent = new StringBuilder();
 		BufferedReader reader = null;
 		try {
@@ -114,6 +127,57 @@ public class SwaggerFileServiceImpl implements SwaggerFileService {
 			}
 		}
 		return fileContent.toString();
+	}
+
+	@Override
+	public List<String> search(SearchRequest searchRequest) {
+		Map<String, List<String>> filenameIdMap = solrSearchService.search(searchRequest);
+		return contructSwagger(filenameIdMap);
+	}
+
+	public Swagger getSearchedSwagger(Entry<String, List<String>> entry) {
+		try {
+			Resource resource = loadFile(entry.getKey());
+			if(resource != null) {
+				String content = getDataFromFile(resource.getInputStream());
+				Swagger swagger = swaggerParser.parse(content);
+				List<String> retainEndPoints = new ArrayList<>();
+				for(String endPoints : entry.getValue()) {
+					String splits[] = endPoints.split(APIEndpoints.SEPERATOR);
+					if(swagger.getPaths() != null && swagger.getPaths().size() > 0) {
+						if(swagger.getPaths().keySet().contains(splits[1])) {
+							retainEndPoints.add(splits[1]);
+						}
+					}
+				}
+				swagger.getPaths().keySet().retainAll(retainEndPoints);
+				return swagger;
+			}
+		} catch (Exception e) {
+			logger.error("Exception occured while selecting search data form swagger = {}",e);
+		}
+		return null;
+	}
+
+	public List<String> contructSwagger(Map<String, List<String>> filenameIdMap) {
+		List<String> swaggers = new ArrayList<String>();
+		try {
+			if (filenameIdMap != null) {
+				for (Entry<String, List<String>> entry : filenameIdMap.entrySet()) {
+					Swagger swagger = getSearchedSwagger(entry);
+					if(swagger != null) {
+						ObjectMapper mapper = new ObjectMapper();
+						mapper.setSerializationInclusion(Include.NON_NULL);
+						String parsedSwagger = mapper.writeValueAsString(swagger);
+						logger.info("Swagger parsed = {}", parsedSwagger);
+						swaggers.add(parsedSwagger);
+					}
+				}
+			}
+		} catch (Exception e) {
+			logger.error("Exception occured while creating swagger from file = {}", e);
+		}
+		return swaggers;
 	}
 
 	public Resource loadFile(String filename) {
@@ -139,6 +203,28 @@ public class SwaggerFileServiceImpl implements SwaggerFileService {
 		} catch (IOException e) {
 			logger.error("Directory already exists = {} ", e);
 		}
+	}
+
+	@Override
+	public String searchOneDoc(SearchRequest searchRequest) {
+		try {
+			Map<String, List<String>> filenameIdMap = solrSearchService.search(searchRequest);
+			if (filenameIdMap != null) {
+				for (Entry<String, List<String>> entry : filenameIdMap.entrySet()) {
+					Swagger swagger = getSearchedSwagger(entry);
+					if(swagger != null) {
+						ObjectMapper mapper = new ObjectMapper();
+						mapper.setSerializationInclusion(Include.NON_NULL);
+						String parsedSwagger = mapper.writeValueAsString(swagger);
+						logger.info("Swagger parsed = {}", parsedSwagger);
+						return parsedSwagger;
+					}
+				}
+			}
+		} catch (Exception e) {
+			logger.error("Exception occured while creating swagger from file = {}", e);
+		}
+		return null;
 	}
 
 }

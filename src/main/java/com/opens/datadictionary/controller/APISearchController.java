@@ -6,28 +6,28 @@ import javax.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MultipartFile;
 
 import com.opens.datadictionary.service.SwaggerFileService;
+import com.opens.datadictionary.solr.dtos.SearchRequest;
 
 @RestController
-@RequestMapping(com.opens.datadictionary.constants.APIEndpoints.UPLOAD_BASE_URL)
-public class SwaggerUploadController {
+@RequestMapping(com.opens.datadictionary.constants.APIEndpoints.SEARCH_BASE_URL)
+public class APISearchController {
 
-	private final static Logger LOGGER = LoggerFactory.getLogger(SwaggerUploadController.class);
+	private final static Logger LOGGER = LoggerFactory.getLogger(APISearchController.class);
 
 	@Autowired
-	private SwaggerFileService storageService;
+	private SwaggerFileService swaggerFileService;
 
 	@RequestMapping(method = RequestMethod.POST)
-	public void uploadSwagger(@RequestParam("file") MultipartFile file, HttpServletRequest request,
+	public String searchAPI(@RequestBody SearchRequest searchRequest, HttpServletRequest request,
 			HttpServletResponse response) {
-		LOGGER.info("Received swagger files.");
-		storageService.store(file);
+		LOGGER.info("Received search request = {} ", searchRequest);
+		return swaggerFileService.searchOneDoc(searchRequest);
 	}
 
 }

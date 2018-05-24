@@ -17,7 +17,7 @@ import org.springframework.stereotype.Service;
 
 import com.google.gson.Gson;
 import com.opens.datadictionary.constants.APIEndpoints;
-import com.opens.datadictionary.service.SolrIndexService;
+import com.opens.datadictionary.service.IndexService;
 import com.opens.datadictionary.solr.models.ApiResource;
 import com.opens.datadictionary.solr.models.ParamDetails;
 import com.opens.datadictionary.solr.models.SolrDocumentDto;
@@ -35,7 +35,7 @@ import io.swagger.models.properties.Property;
 import io.swagger.models.properties.RefProperty;
 
 @Service
-public class SolrIndexServiceImpl implements SolrIndexService {
+public class SolrIndexServiceImpl implements IndexService {
 
 	private static final Logger logger = LoggerFactory.getLogger(SolrIndexServiceImpl.class);
 
@@ -189,25 +189,51 @@ public class SolrIndexServiceImpl implements SolrIndexService {
 				try {
 					SolrInputDocument document = new SolrInputDocument();
 					document.setField("id", dto.getUniqueId());
-					document.setField("swaggerdocId", dto.getSwaggerDocId());
-					document.setField("title", dto.getTitle());
-					document.setField("description", dto.getDescription());
-					document.setField("baseUrl", dto.getBaseUrl());
-					document.setField("host", dto.getHost());
-					document.setField("responseFields", dto.getResponseFields());
-					document.setField("fileName", dto.getFileName());
+					document.setField("swaggerdocId", dto.getSwaggerDocId().toLowerCase());
+					if (dto.getTitle() != null)
+						document.setField("title", dto.getTitle().toLowerCase());
+					if (dto.getDescription() != null)
+						document.setField("description", dto.getDescription().toLowerCase());
+					if (dto.getBaseUrl() != null)
+						document.setField("baseUrl", dto.getBaseUrl().toLowerCase());
+					if (dto.getHost() != null)
+						document.setField("host", dto.getHost().toLowerCase());
+					if (dto.getResponseFields() != null) {
+						document.setField("responseFields", dto.getResponseFields().stream().map(s -> s.toLowerCase())
+								.collect(Collectors.toList()));
+					}
+					if (dto.getFileName() != null)
+						document.setField("fileName", dto.getFileName().toLowerCase());
 
-					document.setField("apiResource.resourceUrl", dto.getApiResource().getResourceUrl());
-					document.setField("apiResource.methodName", dto.getApiResource().getMethodName());
-					document.setField("apiResource.methodName_tags", dto.getApiResource().getTags());
-					document.setField("apiResource.summary", dto.getApiResource().getSummary());
-					document.setField("apiResource.operationId", dto.getApiResource().getOperationId());
+					if (dto.getApiResource() != null)
+						document.setField("apiResource.resourceUrl", dto.getApiResource().getResourceUrl());
+					if (dto.getApiResource().getMethodName() != null)
+						document.setField("apiResource.methodName", dto.getApiResource().getMethodName().toLowerCase());
+					if (dto.getResponseFields() != null) {
+						document.setField("apiResource.methodName_tags", dto.getApiResource().getTags().stream()
+								.map(s -> s.toLowerCase()).collect(Collectors.toList()));
+					}
+					if (dto.getApiResource().getSummary() != null)
+						document.setField("apiResource.summary", dto.getApiResource().getSummary().toLowerCase());
+					if (dto.getApiResource().getOperationId() != null)
+						document.setField("apiResource.operationId",
+								dto.getApiResource().getOperationId().toLowerCase());
+					if (dto.getApiResource().getDescription() != null)
+						document.setField("apiResource.description",
+								dto.getApiResource().getDescription().toLowerCase());
 
-					document.setField("paramDetails.name", dto.getParamDetails().getName());
-					document.setField("paramDetails.paramHttpType", dto.getParamDetails().getParamHttpType());
-					document.setField("paramDetails.description", dto.getParamDetails().getDescription());
+					if (dto.getParamDetails().getName() != null)
+						document.setField("paramDetails.name", dto.getParamDetails().getName().toLowerCase());
+					if (dto.getParamDetails().getParamHttpType() != null)
+						document.setField("paramDetails.paramHttpType",
+								dto.getParamDetails().getParamHttpType().toLowerCase());
+					if (dto.getParamDetails().getDescription() != null)
+						document.setField("paramDetails.description",
+								dto.getParamDetails().getDescription().toLowerCase());
 					document.setField("paramDetails.required", dto.getParamDetails().isRequired());
-					document.setField("paramDetails.paramjavaType", dto.getParamDetails().getParamjavaType());
+					if (dto.getParamDetails().getParamjavaType() != null)
+						document.setField("paramDetails.paramjavaType",
+								dto.getParamDetails().getParamjavaType().toLowerCase());
 					httpSolrClient.add(document);
 					httpSolrClient.commit();
 				} catch (Exception e) {
