@@ -18,6 +18,9 @@ public class ApiResource implements Serializable, Cloneable {
 	private String operationId;
 
 	@JsonIgnore
+	private List<String> responseDef = new ArrayList<>();
+
+	@JsonIgnore
 	private List<ParamDetails> paramDetails = new ArrayList<ParamDetails>();
 
 	public ApiResource() {
@@ -36,10 +39,18 @@ public class ApiResource implements Serializable, Cloneable {
 	}
 
 	@Override
-	public ApiResource clone()  {
-		ApiResource apiResource =  new ApiResource(resourceUrl, methodName, tags, summary, description, operationId);
+	public ApiResource clone() {
+		ApiResource apiResource = new ApiResource(resourceUrl, methodName, tags, summary, description, operationId);
 		apiResource.setParamDetails(null);
 		return apiResource;
+	}
+
+	public List<String> getResponseDef() {
+		return responseDef;
+	}
+
+	public void setResponseDef(List<String> responseDef) {
+		this.responseDef = responseDef;
 	}
 
 	public List<ParamDetails> getParamDetails() {

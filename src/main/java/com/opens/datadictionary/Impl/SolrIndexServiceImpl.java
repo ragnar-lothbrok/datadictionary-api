@@ -1,7 +1,9 @@
 package com.opens.datadictionary.Impl;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -21,13 +23,16 @@ import com.opens.datadictionary.solr.models.ParamDetails;
 import com.opens.datadictionary.solr.models.SolrDocumentDto;
 
 import io.swagger.models.HttpMethod;
+import io.swagger.models.Model;
 import io.swagger.models.Operation;
 import io.swagger.models.Path;
+import io.swagger.models.Response;
 import io.swagger.models.Swagger;
 import io.swagger.models.parameters.BodyParameter;
 import io.swagger.models.parameters.HeaderParameter;
 import io.swagger.models.parameters.Parameter;
 import io.swagger.models.properties.Property;
+import io.swagger.models.properties.RefProperty;
 
 @Service
 public class SolrIndexServiceImpl implements SolrIndexService {
@@ -45,13 +50,15 @@ public class SolrIndexServiceImpl implements SolrIndexService {
 		SolrDocumentDto solrDocumentDto = new SolrDocumentDto();
 
 		// Setting up common fields
-		solrDocumentDto.setId(docId);
+		solrDocumentDto.setSwaggerDocId(docId);
 		solrDocumentDto.setBaseUrl(swagger.getBasePath());
 		solrDocumentDto.setHost(swagger.getHost());
 		if (swagger.getInfo() != null) {
 			solrDocumentDto.setDescription(swagger.getInfo().getDescription());
 			solrDocumentDto.setTitle(swagger.getInfo().getTitle());
 		}
+
+		final Map<String, List<String>> responseMap = responseMap(swagger);
 
 		if (swagger.getPaths() != null && swagger.getPaths().size() > 0) {
 			List<ApiResource> apisList = swagger.getPaths().entrySet().stream()
@@ -70,6 +77,17 @@ public class SolrIndexServiceImpl implements SolrIndexService {
 								if (t.getValue().getPost() != null) {
 									operation = t.getValue().getPost();
 									apiResource.setMethodName(HttpMethod.POST.name());
+								}
+
+								// Response
+								for (Entry<String, Response> response : operation.getResponses().entrySet()) {
+									if (response.getValue().getSchema() != null
+											&& response.getValue().getSchema() instanceof RefProperty) {
+										String splits[] = ((RefProperty) response.getValue().getSchema()).get$ref()
+												.split("\\/");
+										String responseDef = splits[splits.length - 1];
+										apiResource.getResponseDef().add(responseDef);
+									}
 								}
 
 								if (operation != null) {
@@ -131,10 +149,16 @@ public class SolrIndexServiceImpl implements SolrIndexService {
 				for (ParamDetails paramDetail : paramDetails) {
 					SolrDocumentDto flatSolrDocumentDto = solrDocumentDto.clone();
 					ApiResource flatApiResource = apiResource.clone();
-					String id = flatSolrDocumentDto.getId() + APIEndpoints.SEPERATOR + flatApiResource.getResourceUrl()
-							+ APIEndpoints.SEPERATOR + flatApiResource.getMethodName() + APIEndpoints.SEPERATOR
-							+ paramDetail.getParamHttpType() + APIEndpoints.SEPERATOR + paramDetail.getName();
-					flatSolrDocumentDto.setId(id);
+					String id = flatSolrDocumentDto.getSwaggerDocId() + APIEndpoints.SEPERATOR
+							+ flatApiResource.getResourceUrl() + APIEndpoints.SEPERATOR
+							+ flatApiResource.getMethodName() + APIEndpoints.SEPERATOR + paramDetail.getParamHttpType()
+							+ APIEndpoints.SEPERATOR + paramDetail.getName();
+					flatSolrDocumentDto.setUniqueId(id);
+					if (apiResource.getResponseDef() != null) {
+						for (String responseDef : apiResource.getResponseDef()) {
+							flatSolrDocumentDto.setResponseFields(responseMap.get(responseDef));
+						}
+					}
 					flatSolrDocumentDto.setApiResource(flatApiResource);
 					flatSolrDocumentDto.setParamDetails(paramDetail);
 					solrDocumentDtos.add(flatSolrDocumentDto);
@@ -145,6 +169,17 @@ public class SolrIndexServiceImpl implements SolrIndexService {
 		return solrDocumentDtos;
 	}
 
+	public Map<String, List<String>> responseMap(Swagger swagger) {
+		Map<String, List<String>> responseMap = new HashMap<>();
+		for (Entry<String, Model> responseDef : swagger.getDefinitions().entrySet()) {
+			if (responseMap.get(responseDef.getKey()) == null) {
+				responseMap.put(responseDef.getKey(), new ArrayList<>());
+			}
+			responseMap.put(responseDef.getKey(), new ArrayList<>(responseDef.getValue().getProperties().keySet()));
+		}
+		return responseMap;
+	}
+
 	@Override
 	public Boolean indexDocuments(List<SolrDocumentDto> dtos) {
 		logger.info("Indexing started...");
@@ -152,11 +187,13 @@ public class SolrIndexServiceImpl implements SolrIndexService {
 			for (SolrDocumentDto dto : dtos) {
 				try {
 					SolrInputDocument document = new SolrInputDocument();
-					document.setField("id", dto.getId());
+					document.setField("id", dto.getUniqueId());
+					document.setField("swaggerdocId", dto.getSwaggerDocId());
 					document.setField("title", dto.getTitle());
 					document.setField("description", dto.getDescription());
 					document.setField("baseUrl", dto.getBaseUrl());
 					document.setField("host", dto.getHost());
+					document.setField("responseFields", dto.getResponseFields());
 
 					document.setField("apiResource.resourceUrl", dto.getApiResource().getResourceUrl());
 					document.setField("apiResource.methodName", dto.getApiResource().getMethodName());
