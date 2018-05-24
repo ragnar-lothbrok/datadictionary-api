@@ -8,7 +8,7 @@ import io.swagger.models.Swagger;
 
 public interface SolrIndexService {
 
-	List<SolrDocumentDto> transform(Swagger swagger, String docId);
+	List<SolrDocumentDto> transform(Swagger swagger, String docId, String fileName);
 
 	Boolean indexDocuments(List<SolrDocumentDto> dtos);
 }

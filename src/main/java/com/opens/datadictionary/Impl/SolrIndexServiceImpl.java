@@ -43,7 +43,7 @@ public class SolrIndexServiceImpl implements SolrIndexService {
 	private HttpSolrClient httpSolrClient;
 
 	@Override
-	public List<SolrDocumentDto> transform(Swagger swagger, String docId) {
+	public List<SolrDocumentDto> transform(Swagger swagger, String docId, String fileName) {
 		logger.info("Swagger received for transformation.");
 		List<SolrDocumentDto> solrDocumentDtos = new ArrayList<>();
 
@@ -51,6 +51,7 @@ public class SolrIndexServiceImpl implements SolrIndexService {
 
 		// Setting up common fields
 		solrDocumentDto.setSwaggerDocId(docId);
+		solrDocumentDto.setFileName(fileName);
 		solrDocumentDto.setBaseUrl(swagger.getBasePath());
 		solrDocumentDto.setHost(swagger.getHost());
 		if (swagger.getInfo() != null) {
@@ -194,6 +195,7 @@ public class SolrIndexServiceImpl implements SolrIndexService {
 					document.setField("baseUrl", dto.getBaseUrl());
 					document.setField("host", dto.getHost());
 					document.setField("responseFields", dto.getResponseFields());
+					document.setField("fileName", dto.getFileName());
 
 					document.setField("apiResource.resourceUrl", dto.getApiResource().getResourceUrl());
 					document.setField("apiResource.methodName", dto.getApiResource().getMethodName());

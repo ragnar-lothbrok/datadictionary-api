@@ -8,8 +8,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 
 public class ApiResource implements Serializable, Cloneable {
 
-	private static final long serialVersionUID = 1L;
-
+	private static final long serialVersionUID = 7283599013921879783L;
 	private String resourceUrl;
 	private String methodName;
 	private List<String> tags;

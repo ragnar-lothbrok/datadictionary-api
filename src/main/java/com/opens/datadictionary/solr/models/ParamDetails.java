@@ -4,7 +4,7 @@ import java.io.Serializable;
 
 public class ParamDetails implements Serializable {
 
-	private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = -4618750527169767928L;
 
 	private String name;
 

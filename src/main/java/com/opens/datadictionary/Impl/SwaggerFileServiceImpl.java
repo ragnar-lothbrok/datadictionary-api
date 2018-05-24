@@ -52,7 +52,8 @@ public class SwaggerFileServiceImpl implements SwaggerFileService {
 	public void store(MultipartFile file) {
 		try {
 			if (file != null) {
-				String fileName = System.currentTimeMillis() + "-" + file.getOriginalFilename();
+				String uuid = UUID.randomUUID().toString();
+				String fileName = uuid + "-" + file.getOriginalFilename();
 				Files.copy(file.getInputStream(), this.rootLocation.resolve(fileName));
 
 				String swaggerContent = getSwaggerDataFromFile(file.getInputStream());
@@ -63,7 +64,7 @@ public class SwaggerFileServiceImpl implements SwaggerFileService {
 				SwaggerDetail swaggerDetail = new SwaggerDetail(UUID.randomUUID().toString(), fileName, swaggerContent);
 				// commonService.save(swaggerDetail);
 
-				List<SolrDocumentDto> solrDocumentDtos = solrIndexService.transform(swagger, swaggerDetail.getId());
+				List<SolrDocumentDto> solrDocumentDtos = solrIndexService.transform(swagger, swaggerDetail.getId(), fileName);
 
 				solrIndexService.indexDocuments(solrDocumentDtos);
 

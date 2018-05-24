@@ -146,7 +146,7 @@
     <field name="host" type="string" indexed="true" stored="true" docValues="false" />
     <field name="responseFields" type="string"  indexed="true"  stored="true" multiValued="true"/>
     <field name="swaggerdocId" type="string" indexed="true" stored="true" docValues="false" />
-    
+    <field name="fileName" type="string" indexed="true" stored="true" docValues="false" />
     
     
     <field name="apiResource.resourceUrl" type="string" indexed="true" stored="true" docValues="false" />
