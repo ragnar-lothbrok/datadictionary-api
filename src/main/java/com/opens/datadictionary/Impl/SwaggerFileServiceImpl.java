@@ -90,12 +90,17 @@ public class SwaggerFileServiceImpl implements SwaggerFileService {
 	}
 
 	public Swagger validateValidSwaggerFile(String content) {
+		Swagger swagger =  null;
 		try {
-			return swaggerParser.parse(content);
+			swagger =  swaggerParser.parse(content);
+			if(swagger == null) {
+				throw new InvalidSwaggerFileException("Invalid swagger file");
+			}
 		} catch (Exception e) {
 			logger.error("Exception occured while parsing swagger file content = {} ", e);
 			throw new InvalidSwaggerFileException("Invalid swagger file");
 		}
+		return swagger;
 	}
 
 	/**

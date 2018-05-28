@@ -147,6 +147,8 @@
     <field name="responseFields" type="string"  indexed="true"  stored="true" multiValued="true"/>
     <field name="swaggerdocId" type="string" indexed="true" stored="true" docValues="false" />
     <field name="fileName" type="string" indexed="true" stored="true" docValues="false" />
+     <field name="requestFields" type="string"  indexed="true"  stored="true" multiValued="true"/>
+      <field name="headerFields" type="string"  indexed="true"  stored="true" multiValued="true"/>
     
     
     <field name="apiResource.resourceUrl" type="string" indexed="true" stored="true" docValues="false" />
@@ -155,13 +157,6 @@
   <field name="apiResource.summary" type="text_ws_sd" indexed="true" stored="true" docValues="false" />
   <field name="apiResource.description" type="text_ws_sd" indexed="true" stored="true" docValues="false" />
   <field name="apiResource.operationId" type="string" indexed="true" stored="true" docValues="false" />
-  
-  
-  <field name="paramDetails.name" type="string" indexed="true" stored="true" docValues="false" />
-  <field name="paramDetails.paramHttpType" type="string" indexed="true" stored="true" docValues="false" />
-  <field name="paramDetails.description" type="text_ws_sd" indexed="true" stored="true" docValues="false" />
-  <field name="paramDetails.required" type="boolean" indexed="true" stored="true" docValues="false" />
-  <field name="paramDetails.paramjavaType" type="string" indexed="true" stored="true" docValues="false" />
     
     
     <!-- FINISHED -->

@@ -2,9 +2,11 @@ package com.opens.datadictionary.Impl;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -19,7 +21,6 @@ import com.google.gson.Gson;
 import com.opens.datadictionary.constants.APIEndpoints;
 import com.opens.datadictionary.service.IndexService;
 import com.opens.datadictionary.solr.models.ApiResource;
-import com.opens.datadictionary.solr.models.ParamDetails;
 import com.opens.datadictionary.solr.models.SolrDocumentDto;
 
 import io.swagger.models.HttpMethod;
@@ -59,7 +60,7 @@ public class SolrIndexServiceImpl implements IndexService {
 			solrDocumentDto.setTitle(swagger.getInfo().getTitle());
 		}
 
-		final Map<String, List<String>> responseMap = responseMap(swagger);
+		final Map<String, Set<String>> responseMap = responseMap(swagger);
 
 		if (swagger.getPaths() != null && swagger.getPaths().size() > 0) {
 			List<ApiResource> apisList = swagger.getPaths().entrySet().stream()
@@ -67,7 +68,6 @@ public class SolrIndexServiceImpl implements IndexService {
 						@Override
 						public ApiResource apply(Entry<String, Path> t) {
 							ApiResource apiResource = new ApiResource();
-							List<ParamDetails> paramDetailsList = new ArrayList<ParamDetails>();
 							apiResource.setResourceUrl(t.getKey());
 							if (t.getValue() != null) {
 								Operation operation = null;
@@ -100,39 +100,28 @@ public class SolrIndexServiceImpl implements IndexService {
 									if (operation.getParameters() != null) {
 										for (Parameter param : operation.getParameters()) {
 											if (param instanceof HeaderParameter) {
-												ParamDetails paramDetails = new ParamDetails();
-												paramDetails.setParamHttpType(param.getIn());
-												paramDetails.setParamjavaType(((HeaderParameter) param).getType());
-												paramDetails.setName(param.getName());
-												paramDetails.setRequired(param.getRequired());
-												paramDetailsList.add(paramDetails);
+												apiResource.getRequestFields().add(param.getName());
 											}
 											if (param instanceof BodyParameter) {
-												ParamDetails paramDetails = new ParamDetails();
-												paramDetails.setParamHttpType(param.getIn());
-												paramDetails.setName(param.getName());
-												paramDetails.setRequired(param.getRequired());
-												paramDetailsList.add(paramDetails);
-												if (((BodyParameter) param).getSchema() != null
-														&& ((BodyParameter) param).getSchema()
-																.getProperties() != null) {
-													List<ParamDetails> postParamDetails = ((BodyParameter) param)
-															.getSchema().getProperties().entrySet().stream()
-															.map(new Function<Entry<String, Property>, ParamDetails>() {
-																@Override
-																public ParamDetails apply(Entry<String, Property> t) {
-																	ParamDetails paramDetails = new ParamDetails();
-																	paramDetails
-																			.setParamjavaType(t.getValue().getType());
-																	paramDetails.setName(t.getKey());
-																	paramDetails
-																			.setRequired(t.getValue().getRequired());
-																	paramDetails.setDescription(
-																			t.getValue().getDescription());
-																	return paramDetails;
-																}
-															}).collect(Collectors.toList());
-													paramDetailsList.addAll(postParamDetails);
+												apiResource.getHeaderFields().add(param.getName());
+												if (((BodyParameter) param).getSchema() != null) {
+													if (((BodyParameter) param).getSchema().getProperties() != null) {
+														apiResource.getRequestFields().addAll(((BodyParameter) param)
+																.getSchema().getProperties().entrySet().stream()
+																.map(new Function<Entry<String, Property>, String>() {
+																	@Override
+																	public String apply(Entry<String, Property> t) {
+																		return t.getKey();
+																	}
+																}).collect(Collectors.toSet()));
+													} else if (((BodyParameter) param).getSchema()
+															.getReference() != null) {
+														apiResource.getRequestFields()
+																.addAll(responseMap.get(((BodyParameter) param)
+																		.getSchema().getReference()
+																		.substring(((BodyParameter) param).getSchema()
+																				.getReference().lastIndexOf("/") + 1)));
+													}
 												}
 											}
 										}
@@ -140,43 +129,48 @@ public class SolrIndexServiceImpl implements IndexService {
 
 								}
 							}
-							apiResource.getParamDetails().addAll(paramDetailsList);
 							return apiResource;
 						}
 					}).collect(Collectors.toList());
 
 			for (ApiResource apiResource : apisList) {
-				List<ParamDetails> paramDetails = apiResource.getParamDetails();
-				for (ParamDetails paramDetail : paramDetails) {
-					SolrDocumentDto flatSolrDocumentDto = solrDocumentDto.clone();
-					ApiResource flatApiResource = apiResource.clone();
-					String id = flatSolrDocumentDto.getSwaggerDocId() + APIEndpoints.SEPERATOR
-							+ flatApiResource.getResourceUrl() + APIEndpoints.SEPERATOR
-							+ flatApiResource.getMethodName() + APIEndpoints.SEPERATOR + paramDetail.getParamHttpType()
-							+ APIEndpoints.SEPERATOR + paramDetail.getName();
-					flatSolrDocumentDto.setUniqueId(id);
-					if (apiResource.getResponseDef() != null) {
-						for (String responseDef : apiResource.getResponseDef()) {
-							flatSolrDocumentDto.setResponseFields(responseMap.get(responseDef));
-						}
+				SolrDocumentDto flatSolrDocumentDto = solrDocumentDto.clone();
+				ApiResource flatApiResource = apiResource.clone();
+				String id = flatSolrDocumentDto.getSwaggerDocId() + APIEndpoints.SEPERATOR
+						+ flatApiResource.getResourceUrl() + APIEndpoints.SEPERATOR + flatApiResource.getMethodName();
+				flatSolrDocumentDto.setUniqueId(id);
+				if (apiResource.getResponseDef() != null) {
+					for (String responseDef : apiResource.getResponseDef()) {
+						flatSolrDocumentDto.setResponseFields(responseMap.get(responseDef));
 					}
-					flatSolrDocumentDto.setApiResource(flatApiResource);
-					flatSolrDocumentDto.setParamDetails(paramDetail);
-					solrDocumentDtos.add(flatSolrDocumentDto);
 				}
+				flatSolrDocumentDto.setApiResource(flatApiResource);
+				flatSolrDocumentDto.setRequestFields(apiResource.getRequestFields());
+				flatSolrDocumentDto.setHeaderFields(apiResource.getHeaderFields());
+				solrDocumentDtos.add(flatSolrDocumentDto);
+
 			}
 		}
 		logger.info("Transformed Solr Document = {} ", new Gson().toJson(solrDocumentDtos));
 		return solrDocumentDtos;
 	}
 
-	public Map<String, List<String>> responseMap(Swagger swagger) {
-		Map<String, List<String>> responseMap = new HashMap<>();
+	public Map<String, Set<String>> responseMap(Swagger swagger) {
+		Map<String, Set<String>> responseMap = new HashMap<>();
 		for (Entry<String, Model> responseDef : swagger.getDefinitions().entrySet()) {
 			if (responseMap.get(responseDef.getKey()) == null) {
-				responseMap.put(responseDef.getKey(), new ArrayList<>());
+				responseMap.put(responseDef.getKey(), new HashSet<String>());
 			}
-			responseMap.put(responseDef.getKey(), new ArrayList<>(responseDef.getValue().getProperties().keySet()));
+			responseMap.get(responseDef.getKey()).addAll(responseDef.getValue().getProperties().keySet());
+			if (responseDef.getValue().getProperties().size() > 0) {
+				for (Entry<String, Property> entry : responseDef.getValue().getProperties().entrySet()) {
+					responseMap.get(responseDef.getKey()).add(entry.getKey());
+					if (entry.getValue() instanceof RefProperty) {
+						responseMap.get(responseDef.getKey()).addAll(responseMap.get(((RefProperty) entry.getValue())
+								.get$ref().substring(((RefProperty) entry.getValue()).get$ref().lastIndexOf("/") + 1)));
+					}
+				}
+			}
 		}
 		return responseMap;
 	}
@@ -222,20 +216,16 @@ public class SolrIndexServiceImpl implements IndexService {
 						document.setField("apiResource.description",
 								dto.getApiResource().getDescription().toLowerCase());
 
-					if (dto.getParamDetails().getName() != null)
-						document.setField("paramDetails.name", dto.getParamDetails().getName().toLowerCase());
-					if (dto.getParamDetails().getParamHttpType() != null)
-						document.setField("paramDetails.paramHttpType",
-								dto.getParamDetails().getParamHttpType().toLowerCase());
-					if (dto.getParamDetails().getDescription() != null)
-						document.setField("paramDetails.description",
-								dto.getParamDetails().getDescription().toLowerCase());
-					document.setField("paramDetails.required", dto.getParamDetails().isRequired());
-					if (dto.getParamDetails().getParamjavaType() != null)
-						document.setField("paramDetails.paramjavaType",
-								dto.getParamDetails().getParamjavaType().toLowerCase());
-					httpSolrClient.add(document);
-					httpSolrClient.commit();
+					if (dto.getRequestFields() != null) {
+						document.setField("requestFields", dto.getResponseFields().stream().map(s -> s.toLowerCase())
+								.collect(Collectors.toList()));
+					}
+					if (dto.getHeaderFields() != null) {
+						document.setField("headerFields", dto.getHeaderFields().stream().map(s -> s.toLowerCase())
+								.collect(Collectors.toList()));
+					}
+					 httpSolrClient.add(document);
+					 httpSolrClient.commit();
 				} catch (Exception e) {
 					logger.info("Not able to index Solr Documents = {} ", e);
 				}

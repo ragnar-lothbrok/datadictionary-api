@@ -1,8 +1,9 @@
 package com.opens.datadictionary.solr.models;
 
 import java.io.Serializable;
-import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
@@ -17,10 +18,13 @@ public class ApiResource implements Serializable, Cloneable {
 	private String operationId;
 
 	@JsonIgnore
-	private List<String> responseDef = new ArrayList<>();
+	private Set<String> responseDef = new HashSet<>();
 
 	@JsonIgnore
-	private List<ParamDetails> paramDetails = new ArrayList<ParamDetails>();
+	private Set<String> requestFields = new HashSet<>();
+
+	@JsonIgnore
+	private Set<String> headerFields = new HashSet<>();
 
 	public ApiResource() {
 
@@ -40,24 +44,31 @@ public class ApiResource implements Serializable, Cloneable {
 	@Override
 	public ApiResource clone() {
 		ApiResource apiResource = new ApiResource(resourceUrl, methodName, tags, summary, description, operationId);
-		apiResource.setParamDetails(null);
 		return apiResource;
 	}
 
-	public List<String> getResponseDef() {
+	public Set<String> getResponseDef() {
 		return responseDef;
 	}
 
-	public void setResponseDef(List<String> responseDef) {
+	public Set<String> getRequestFields() {
+		return requestFields;
+	}
+
+	public void setRequestFields(Set<String> requestFields) {
+		this.requestFields = requestFields;
+	}
+
+	public Set<String> getHeaderFields() {
+		return headerFields;
+	}
+
+	public void setHeaderFields(Set<String> headerFields) {
+		this.headerFields = headerFields;
+	}
+
+	public void setResponseDef(Set<String> responseDef) {
 		this.responseDef = responseDef;
-	}
-
-	public List<ParamDetails> getParamDetails() {
-		return paramDetails;
-	}
-
-	public void setParamDetails(List<ParamDetails> paramDetails) {
-		this.paramDetails = paramDetails;
 	}
 
 	public String getResourceUrl() {

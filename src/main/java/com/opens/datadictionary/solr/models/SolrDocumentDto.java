@@ -1,7 +1,8 @@
 package com.opens.datadictionary.solr.models;
 
 import java.io.Serializable;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 public class SolrDocumentDto implements Serializable, Cloneable {
 
@@ -23,9 +24,11 @@ public class SolrDocumentDto implements Serializable, Cloneable {
 
 	private ApiResource apiResource;
 
-	private ParamDetails paramDetails;
+	private Set<String> requestFields = new HashSet<>();
 
-	private List<String> responseFields;
+	private Set<String> headerFields = new HashSet<>();
+
+	private Set<String> responseFields = new HashSet<>();
 
 	private String fileName;
 
@@ -37,11 +40,11 @@ public class SolrDocumentDto implements Serializable, Cloneable {
 		this.fileName = fileName;
 	}
 
-	public List<String> getResponseFields() {
+	public Set<String> getResponseFields() {
 		return responseFields;
 	}
 
-	public void setResponseFields(List<String> responseFields) {
+	public void setResponseFields(Set<String> responseFields) {
 		this.responseFields = responseFields;
 	}
 
@@ -63,6 +66,22 @@ public class SolrDocumentDto implements Serializable, Cloneable {
 		this.baseUrl = baseUrl;
 		this.host = host;
 		this.fileName = fileName;
+	}
+
+	public Set<String> getRequestFields() {
+		return requestFields;
+	}
+
+	public void setRequestFields(Set<String> requestFields) {
+		this.requestFields = requestFields;
+	}
+
+	public Set<String> getHeaderFields() {
+		return headerFields;
+	}
+
+	public void setHeaderFields(Set<String> headerFields) {
+		this.headerFields = headerFields;
 	}
 
 	public String getUniqueId() {
@@ -119,14 +138,6 @@ public class SolrDocumentDto implements Serializable, Cloneable {
 
 	public void setApiResource(ApiResource apiResource) {
 		this.apiResource = apiResource;
-	}
-
-	public ParamDetails getParamDetails() {
-		return paramDetails;
-	}
-
-	public void setParamDetails(ParamDetails paramDetails) {
-		this.paramDetails = paramDetails;
 	}
 
 }
