@@ -1,0 +1,17 @@
+http://petstore.swagger.io
+
+
+Solr Installation
+
+1. Downloaded
+2. Extract It
+3. Create Core
+4. Go to C:\Users\raghugupta\Downloads\solr-7.3.1\server\solr
+5. Go to the core you created
+6. Go to C:\Users\raghugupta\Downloads\solr-7.3.1\server\solr\dictionary\conf
+7. Replace manage-schema file content
+8. Restart Solr
+
+
+Don't start application without running Solr
+Ignore Mongo exception
