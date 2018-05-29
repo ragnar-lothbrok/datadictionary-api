@@ -1,6 +1,15 @@
 http://petstore.swagger.io
 
 
+http://editor2.swagger.io/#!/
+
+http://localhost:8080/swagger-ui.html#/
+
+http://petstore.swagger.io/#/pet/addPet
+
+http://localhost:8983/solr/#/dictionary/query
+
+
 Solr Installation
 
 1. Downloaded
