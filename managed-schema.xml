@@ -147,8 +147,11 @@
     <field name="responseFields" type="string"  indexed="true"  stored="true" multiValued="true"/>
     <field name="swaggerdocId" type="string" indexed="true" stored="true" docValues="false" />
     <field name="fileName" type="string" indexed="true" stored="true" docValues="false" />
-     <field name="requestFields" type="string"  indexed="true"  stored="true" multiValued="true"/>
-      <field name="headerFields" type="string"  indexed="true"  stored="true" multiValued="true"/>
+    <field name="requestFields" type="string"  indexed="true"  stored="true" multiValued="true"/>
+    <field name="headerFields" type="string"  indexed="true"  stored="true" multiValued="true"/>
+    <field name="queryFields" type="string"  indexed="true"  stored="true" multiValued="true"/>
+    <field name="pathFields" type="string"  indexed="true"  stored="true" multiValued="true"/>
+    <field name="allFields" type="string"  indexed="true"  stored="true" multiValued="true"/>
     
     
     <field name="apiResource.resourceUrl" type="string" indexed="true" stored="true" docValues="false" />

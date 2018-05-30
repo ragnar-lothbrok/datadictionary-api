@@ -26,6 +26,12 @@ public class ApiResource implements Serializable, Cloneable {
 	@JsonIgnore
 	private Set<String> headerFields = new HashSet<>();
 
+	@JsonIgnore
+	private Set<String> queryFields = new HashSet<>();
+
+	@JsonIgnore
+	private Set<String> pathFields = new HashSet<>();
+
 	public ApiResource() {
 
 	}
@@ -117,6 +123,22 @@ public class ApiResource implements Serializable, Cloneable {
 
 	public void setOperationId(String operationId) {
 		this.operationId = operationId;
+	}
+
+	public Set<String> getQueryFields() {
+		return queryFields;
+	}
+
+	public void setQueryFields(Set<String> queryFields) {
+		this.queryFields = queryFields;
+	}
+
+	public Set<String> getPathFields() {
+		return pathFields;
+	}
+
+	public void setPathFields(Set<String> pathFields) {
+		this.pathFields = pathFields;
 	}
 
 }

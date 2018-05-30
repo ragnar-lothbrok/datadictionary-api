@@ -32,6 +32,8 @@ import io.swagger.models.Swagger;
 import io.swagger.models.parameters.BodyParameter;
 import io.swagger.models.parameters.HeaderParameter;
 import io.swagger.models.parameters.Parameter;
+import io.swagger.models.parameters.PathParameter;
+import io.swagger.models.parameters.QueryParameter;
 import io.swagger.models.properties.Property;
 import io.swagger.models.properties.RefProperty;
 
@@ -68,6 +70,7 @@ public class SolrIndexServiceImpl implements IndexService {
 						@Override
 						public ApiResource apply(Entry<String, Path> t) {
 							ApiResource apiResource = new ApiResource();
+							List<String> fieldsMetaData = new ArrayList<>();
 							apiResource.setResourceUrl(t.getKey());
 							if (t.getValue() != null) {
 								Operation operation = null;
@@ -78,6 +81,11 @@ public class SolrIndexServiceImpl implements IndexService {
 								if (t.getValue().getPost() != null) {
 									operation = t.getValue().getPost();
 									apiResource.setMethodName(HttpMethod.POST.name());
+								}
+
+								if (t.getValue().getPut() != null) {
+									operation = t.getValue().getPut();
+									apiResource.setMethodName(HttpMethod.PUT.name());
 								}
 
 								// Response
@@ -99,8 +107,17 @@ public class SolrIndexServiceImpl implements IndexService {
 
 									if (operation.getParameters() != null) {
 										for (Parameter param : operation.getParameters()) {
+											if (param.getDescription() != null) {
+												fieldsMetaData.add(param.getDescription());
+											}
 											if (param instanceof HeaderParameter) {
 												apiResource.getRequestFields().add(param.getName());
+											}
+											if (param instanceof PathParameter) {
+												apiResource.getQueryFields().add(param.getName());
+											}
+											if (param instanceof QueryParameter) {
+												apiResource.getQueryFields().add(param.getName());
 											}
 											if (param instanceof BodyParameter) {
 												apiResource.getHeaderFields().add(param.getName());
@@ -118,9 +135,10 @@ public class SolrIndexServiceImpl implements IndexService {
 															.getReference() != null) {
 														apiResource.getRequestFields()
 																.addAll(responseMap.get(((BodyParameter) param)
-																		.getSchema().getReference()
-																		.substring(((BodyParameter) param).getSchema()
-																				.getReference().lastIndexOf("/") + 1)));
+																		.getSchema().getReference().substring(
+																				((BodyParameter) param).getSchema()
+																						.getReference().lastIndexOf("/")
+																						+ 1)));
 													}
 												}
 											}
@@ -147,6 +165,12 @@ public class SolrIndexServiceImpl implements IndexService {
 				flatSolrDocumentDto.setApiResource(flatApiResource);
 				flatSolrDocumentDto.setRequestFields(apiResource.getRequestFields());
 				flatSolrDocumentDto.setHeaderFields(apiResource.getHeaderFields());
+				flatSolrDocumentDto.setQueryFields(apiResource.getQueryFields());
+				flatSolrDocumentDto.setPathFields(apiResource.getPathFields());
+				flatSolrDocumentDto.getAllFields().addAll(apiResource.getRequestFields());
+				flatSolrDocumentDto.getAllFields().addAll(apiResource.getHeaderFields());
+				flatSolrDocumentDto.getAllFields().addAll(apiResource.getQueryFields());
+				flatSolrDocumentDto.getAllFields().addAll(apiResource.getPathFields());
 				solrDocumentDtos.add(flatSolrDocumentDto);
 
 			}
@@ -221,11 +245,23 @@ public class SolrIndexServiceImpl implements IndexService {
 								.collect(Collectors.toList()));
 					}
 					if (dto.getHeaderFields() != null) {
-						document.setField("headerFields", dto.getHeaderFields().stream().map(s -> s.toLowerCase())
-								.collect(Collectors.toList()));
+						document.setField("headerFields",
+								dto.getHeaderFields().stream().map(s -> s.toLowerCase()).collect(Collectors.toList()));
 					}
-					 httpSolrClient.add(document);
-					 httpSolrClient.commit();
+					if (dto.getQueryFields() != null) {
+						document.setField("queryFields",
+								dto.getQueryFields().stream().map(s -> s.toLowerCase()).collect(Collectors.toList()));
+					}
+					if (dto.getPathFields() != null) {
+						document.setField("pathFields",
+								dto.getPathFields().stream().map(s -> s.toLowerCase()).collect(Collectors.toList()));
+					}
+					if (dto.getPathFields() != null) {
+						document.setField("allFields",
+								dto.getAllFields().stream().map(s -> s.toLowerCase()).collect(Collectors.toList()));
+					}
+					httpSolrClient.add(document);
+					httpSolrClient.commit();
 				} catch (Exception e) {
 					logger.info("Not able to index Solr Documents = {} ", e);
 				}

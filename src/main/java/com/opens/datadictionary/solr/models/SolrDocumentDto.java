@@ -30,6 +30,12 @@ public class SolrDocumentDto implements Serializable, Cloneable {
 
 	private Set<String> responseFields = new HashSet<>();
 
+	private Set<String> queryFields = new HashSet<>();
+
+	private Set<String> pathFields = new HashSet<>();
+	
+	private Set<String> allFields = new HashSet<>();
+
 	private String fileName;
 
 	public String getFileName() {
@@ -136,8 +142,32 @@ public class SolrDocumentDto implements Serializable, Cloneable {
 		return apiResource;
 	}
 
+	public Set<String> getQueryFields() {
+		return queryFields;
+	}
+
+	public void setQueryFields(Set<String> queryFields) {
+		this.queryFields = queryFields;
+	}
+
+	public Set<String> getPathFields() {
+		return pathFields;
+	}
+
+	public void setPathFields(Set<String> pathFields) {
+		this.pathFields = pathFields;
+	}
+
 	public void setApiResource(ApiResource apiResource) {
 		this.apiResource = apiResource;
+	}
+
+	public Set<String> getAllFields() {
+		return allFields;
+	}
+
+	public void setAllFields(Set<String> allFields) {
+		this.allFields = allFields;
 	}
 
 }
