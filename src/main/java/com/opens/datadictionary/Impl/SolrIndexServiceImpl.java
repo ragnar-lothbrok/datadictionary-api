@@ -17,6 +17,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.google.common.base.Joiner;
 import com.google.gson.Gson;
 import com.opens.datadictionary.constants.APIEndpoints;
 import com.opens.datadictionary.service.IndexService;
@@ -67,10 +68,11 @@ public class SolrIndexServiceImpl implements IndexService {
 		if (swagger.getPaths() != null && swagger.getPaths().size() > 0) {
 			List<ApiResource> apisList = swagger.getPaths().entrySet().stream()
 					.map(new Function<Entry<String, Path>, ApiResource>() {
+						List<String> fieldsMetaData = new ArrayList<>();
+
 						@Override
 						public ApiResource apply(Entry<String, Path> t) {
 							ApiResource apiResource = new ApiResource();
-							List<String> fieldsMetaData = new ArrayList<>();
 							apiResource.setResourceUrl(t.getKey());
 							if (t.getValue() != null) {
 								Operation operation = null;
@@ -147,6 +149,7 @@ public class SolrIndexServiceImpl implements IndexService {
 
 								}
 							}
+							apiResource.setMeataData(Joiner.on(" ").join(fieldsMetaData));
 							return apiResource;
 						}
 					}).collect(Collectors.toList());

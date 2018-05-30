@@ -154,12 +154,13 @@
     <field name="allFields" type="string"  indexed="true"  stored="true" multiValued="true"/>
     
     
+    <field name="apiResource.metadata" type="text_ws_sd" indexed="true" stored="true" docValues="false" />
     <field name="apiResource.resourceUrl" type="string" indexed="true" stored="true" docValues="false" />
     <field name="apiResource.methodName" type="string" indexed="true" stored="true" docValues="false" />
     <dynamicField name="*_tags" type="string"  indexed="true"  stored="true" multiValued="true"/>
-  <field name="apiResource.summary" type="text_ws_sd" indexed="true" stored="true" docValues="false" />
-  <field name="apiResource.description" type="text_ws_sd" indexed="true" stored="true" docValues="false" />
-  <field name="apiResource.operationId" type="string" indexed="true" stored="true" docValues="false" />
+	<field name="apiResource.summary" type="text_ws_sd" indexed="true" stored="true" docValues="false" />
+	<field name="apiResource.description" type="text_ws_sd" indexed="true" stored="true" docValues="false" />
+	<field name="apiResource.operationId" type="string" indexed="true" stored="true" docValues="false" />
     
     
     <!-- FINISHED -->

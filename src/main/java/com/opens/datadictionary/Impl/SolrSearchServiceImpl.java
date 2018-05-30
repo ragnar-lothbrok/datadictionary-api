@@ -40,10 +40,11 @@ public class SolrSearchServiceImpl implements SearchService {
 				if (!StringUtils.isEmpty(searchRequest.getSearchText())) {
 					searchRequest.setSearchText(searchRequest.getSearchText().toLowerCase());
 					queryText = "title:" + searchRequest.getSearchText();
-					queryText += " OR description" + searchRequest.getSearchText();
-					queryText += " OR apiResource.methodName_tags" + searchRequest.getSearchText();
-					queryText += " OR apiResource.summary" + searchRequest.getSearchText();
-					queryText += " OR apiResource.description" + searchRequest.getSearchText();
+					queryText += " OR description:" + searchRequest.getSearchText();
+					queryText += " OR apiResource.methodName_tags:" + searchRequest.getSearchText();
+					queryText += " OR apiResource.summary:" + searchRequest.getSearchText();
+					queryText += " OR apiResource.description:" + searchRequest.getSearchText();
+					queryText += " OR apiResource.metadata:" + searchRequest.getSearchText();
 				}
 			}
 			if (searchRequest.getFilters() != null) {

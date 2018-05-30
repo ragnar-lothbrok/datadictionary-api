@@ -33,7 +33,7 @@ public class SolrDocumentDto implements Serializable, Cloneable {
 	private Set<String> queryFields = new HashSet<>();
 
 	private Set<String> pathFields = new HashSet<>();
-	
+
 	private Set<String> allFields = new HashSet<>();
 
 	private String fileName;
