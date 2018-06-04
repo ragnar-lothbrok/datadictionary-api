@@ -9,6 +9,10 @@ http://petstore.swagger.io/#/pet/addPet
 
 http://localhost:8983/solr/#/dictionary/query
 
+https://www.json2yaml.com/
+
+
+https://codebeautify.org/jsonviewer
 
 Solr Installation
 
