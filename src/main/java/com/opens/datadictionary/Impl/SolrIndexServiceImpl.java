@@ -1,12 +1,15 @@
 package com.opens.datadictionary.Impl;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.Stack;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -17,6 +20,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Joiner;
 import com.google.gson.Gson;
 import com.opens.datadictionary.constants.APIEndpoints;
@@ -35,6 +40,7 @@ import io.swagger.models.parameters.HeaderParameter;
 import io.swagger.models.parameters.Parameter;
 import io.swagger.models.parameters.PathParameter;
 import io.swagger.models.parameters.QueryParameter;
+import io.swagger.models.properties.ArrayProperty;
 import io.swagger.models.properties.Property;
 import io.swagger.models.properties.RefProperty;
 
@@ -45,6 +51,8 @@ public class SolrIndexServiceImpl implements IndexService {
 
 	@Autowired
 	private HttpSolrClient httpSolrClient;
+
+	private final ObjectMapper mapper = new ObjectMapper();
 
 	@Override
 	public List<SolrDocumentDto> transform(Swagger swagger, String docId, String fileName) {
@@ -63,7 +71,7 @@ public class SolrIndexServiceImpl implements IndexService {
 			solrDocumentDto.setTitle(swagger.getInfo().getTitle());
 		}
 
-		final Map<String, Set<String>> responseMap = responseMap(swagger);
+		final Map<String, Map<String, String>> responseMap = responseMap(swagger);
 
 		if (swagger.getPaths() != null && swagger.getPaths().size() > 0) {
 			List<ApiResource> apisList = swagger.getPaths().entrySet().stream()
@@ -116,13 +124,13 @@ public class SolrIndexServiceImpl implements IndexService {
 												apiResource.getRequestFields().add(param.getName());
 											}
 											if (param instanceof PathParameter) {
-												apiResource.getQueryFields().add(param.getName());
+												apiResource.getPathFields().add(param.getName());
 											}
 											if (param instanceof QueryParameter) {
 												apiResource.getQueryFields().add(param.getName());
 											}
 											if (param instanceof BodyParameter) {
-												apiResource.getHeaderFields().add(param.getName());
+												apiResource.getRequestFields().add(param.getName());
 												if (((BodyParameter) param).getSchema() != null) {
 													if (((BodyParameter) param).getSchema().getProperties() != null) {
 														apiResource.getRequestFields().addAll(((BodyParameter) param)
@@ -135,12 +143,19 @@ public class SolrIndexServiceImpl implements IndexService {
 																}).collect(Collectors.toSet()));
 													} else if (((BodyParameter) param).getSchema()
 															.getReference() != null) {
-														apiResource.getRequestFields()
-																.addAll(responseMap.get(((BodyParameter) param)
-																		.getSchema().getReference().substring(
-																				((BodyParameter) param).getSchema()
-																						.getReference().lastIndexOf("/")
-																						+ 1)));
+														apiResource.getRequestFields().addAll(responseMap
+																.get(((BodyParameter) param).getSchema().getReference()
+																		.substring(((BodyParameter) param).getSchema()
+																				.getReference().lastIndexOf("/") + 1))
+																.keySet());
+														Collection<String> decriptions = responseMap
+																.get(((BodyParameter) param).getSchema().getReference()
+																		.substring(((BodyParameter) param).getSchema()
+																				.getReference().lastIndexOf("/") + 1))
+																.values();
+														decriptions.removeAll(Collections.singleton(null));
+														apiResource.getMeataData()
+																.append(Joiner.on(" ").join(decriptions));
 													}
 												}
 											}
@@ -149,7 +164,7 @@ public class SolrIndexServiceImpl implements IndexService {
 
 								}
 							}
-							apiResource.setMeataData(Joiner.on(" ").join(fieldsMetaData));
+							apiResource.getMeataData().append(Joiner.on(" ").join(fieldsMetaData));
 							return apiResource;
 						}
 					}).collect(Collectors.toList());
@@ -162,11 +177,21 @@ public class SolrIndexServiceImpl implements IndexService {
 				flatSolrDocumentDto.setUniqueId(id);
 				if (apiResource.getResponseDef() != null) {
 					for (String responseDef : apiResource.getResponseDef()) {
-						flatSolrDocumentDto.setResponseFields(responseMap.get(responseDef));
+						if (responseMap.get(responseDef) != null) {
+							flatSolrDocumentDto.getResponseFields().addAll(responseMap.get(responseDef).keySet());
+							Collection<String> descriptions = responseMap.get(responseDef).values();
+							descriptions.removeAll(Collections.singleton(null));
+							apiResource.getMeataData().append(Joiner.on(" ").join(descriptions));
+						}
 					}
 				}
 				flatSolrDocumentDto.setApiResource(flatApiResource);
-				flatSolrDocumentDto.setRequestFields(apiResource.getRequestFields());
+				if (apiResource.getRequestFields() != null) {
+					for (String requestF : apiResource.getRequestFields()) {
+						if (responseMap.get(requestF) != null)
+							flatSolrDocumentDto.getRequestFields().addAll(responseMap.get(requestF).keySet());
+					}
+				}
 				flatSolrDocumentDto.setHeaderFields(apiResource.getHeaderFields());
 				flatSolrDocumentDto.setQueryFields(apiResource.getQueryFields());
 				flatSolrDocumentDto.setPathFields(apiResource.getPathFields());
@@ -174,6 +199,7 @@ public class SolrIndexServiceImpl implements IndexService {
 				flatSolrDocumentDto.getAllFields().addAll(apiResource.getHeaderFields());
 				flatSolrDocumentDto.getAllFields().addAll(apiResource.getQueryFields());
 				flatSolrDocumentDto.getAllFields().addAll(apiResource.getPathFields());
+				flatSolrDocumentDto.getAllFields().addAll(flatSolrDocumentDto.getResponseFields());
 				solrDocumentDtos.add(flatSolrDocumentDto);
 
 			}
@@ -182,40 +208,64 @@ public class SolrIndexServiceImpl implements IndexService {
 		return solrDocumentDtos;
 	}
 
-	public Map<String, Set<String>> responseMap(Swagger swagger) {
-		Map<String, Set<String>> responseMap = new HashMap<>();
-		for (Entry<String, Model> responseDef : swagger.getDefinitions().entrySet()) {
-			if (responseMap.get(responseDef.getKey()) == null) {
-				responseMap.put(responseDef.getKey(), new HashSet<String>());
-			}
-			responseMap.get(responseDef.getKey()).addAll(responseDef.getValue().getProperties().keySet());
-			if (responseDef.getValue().getProperties().size() > 0) {
-				for (Entry<String, Property> entry : responseDef.getValue().getProperties().entrySet()) {
-					responseMap.get(responseDef.getKey()).add(entry.getKey());
-					if (entry.getValue() instanceof RefProperty) {
-						Set<String> values = responseMap.get(((RefProperty) entry.getValue())
-								.get$ref().substring(((RefProperty) entry.getValue()).get$ref().lastIndexOf("/") + 1));
-						if(values != null){
-							responseMap.get(responseDef.getKey()).addAll(values);
-						}
+	private void getFields(Property property, Map<String, String> fields) {
+		if (property instanceof ArrayProperty) {
+			getFields(((ArrayProperty) property).getItems(), fields);
+		} else if (property instanceof RefProperty) {
+			fields.put(
+					((RefProperty) property).get$ref()
+							.substring(((RefProperty) property).get$ref().lastIndexOf("/") + 1),
+					((RefProperty) property).getDescription());
+		}
+	}
+
+	public Map<String, Map<String, String>> responseMap(Swagger swagger) {
+		Map<String, Map<String, String>> responseMap = new HashMap<>();
+		try {
+			for (Entry<String, Model> responseDef : swagger.getDefinitions().entrySet()) {
+				if (responseMap.get(responseDef.getKey()) == null) {
+					responseMap.put(responseDef.getKey(), new HashMap<String, String>());
+					responseMap.get(responseDef.getKey()).put(responseDef.getKey(), "");
+				}
+				if (responseDef.getValue() != null && responseDef.getValue().getProperties() != null) {
+					for (Entry<String, Property> entry : responseDef.getValue().getProperties().entrySet()) {
+						responseMap.get(responseDef.getKey()).put(entry.getKey(), entry.getValue().getDescription());
+					}
+					for (Entry<String, Property> entry : responseDef.getValue().getProperties().entrySet()) {
+						getFields(entry.getValue(), responseMap.get(responseDef.getKey()));
 					}
 				}
 			}
+			logger.info("Fields Name description map = {} ", mapper.writeValueAsString(responseMap));
+			DFS(responseMap);
+			logger.info("Fields Name description map = {} ", mapper.writeValueAsString(responseMap));
+		} catch (Exception e) {
+			logger.error("Exception occured while creating response field map = {} ", e);
 		}
-		
-		for(Entry<String, Set<String>> resEntry : responseMap.entrySet()){
-			Set<String> values= new HashSet<String>();
-			for(String value : resEntry.getValue()){
-				values.add(value);
-				if(responseMap.get(value) != null){
-					values.addAll(responseMap.get(value));
+		return responseMap;
+	}
+
+	// Adding all nested fields in a flat set
+	private void DFS(Map<String, Map<String, String>> responseMap) throws JsonProcessingException {
+		Set<String> visitedNodes = new HashSet<>();
+		Map<String, String> newFields = new HashMap<>();
+		for (Entry<String, Map<String, String>> entry : responseMap.entrySet()) {
+			visitedNodes.clear();
+			newFields.clear();
+			Stack<Entry<String, String>> stack = new Stack<>();
+			stack.addAll(entry.getValue().entrySet());
+			while (!stack.isEmpty()) {
+				Entry<String, String> fieldName = stack.pop();
+				visitedNodes.add(fieldName.getKey());
+				newFields.put(fieldName.getKey(), fieldName.getValue());
+				if (responseMap.get(fieldName.getKey()) != null) {
+					Set<Entry<String, String>> filteredData = responseMap.get(fieldName.getKey()).entrySet().stream()
+							.filter(e -> !visitedNodes.contains(e.getKey())).collect(Collectors.toSet());
+					stack.addAll(filteredData);
 				}
 			}
-			responseMap.get(resEntry.getKey()).addAll(values);
+			responseMap.get(entry.getKey()).putAll(newFields);
 		}
-		
-		
-		return responseMap;
 	}
 
 	@Override
@@ -226,61 +276,58 @@ public class SolrIndexServiceImpl implements IndexService {
 				try {
 					SolrInputDocument document = new SolrInputDocument();
 					document.setField("id", dto.getUniqueId());
-					document.setField("swaggerdocId", dto.getSwaggerDocId().toLowerCase());
+					document.setField("swaggerdocId", dto.getSwaggerDocId());
 					if (dto.getTitle() != null)
-						document.setField("title", dto.getTitle().toLowerCase());
+						document.setField("title", dto.getTitle());
 					if (dto.getDescription() != null)
-						document.setField("description", dto.getDescription().toLowerCase());
+						document.setField("description", dto.getDescription());
 					if (dto.getBaseUrl() != null)
-						document.setField("baseUrl", dto.getBaseUrl().toLowerCase());
+						document.setField("baseUrl", dto.getBaseUrl());
 					if (dto.getHost() != null)
-						document.setField("host", dto.getHost().toLowerCase());
+						document.setField("host", dto.getHost());
 					if (dto.getResponseFields() != null) {
-						document.setField("responseFields", dto.getResponseFields().stream().map(s -> s.toLowerCase())
-								.collect(Collectors.toList()));
+						document.setField("responseFields", dto.getResponseFields());
 					}
 					if (dto.getFileName() != null)
-						document.setField("fileName", dto.getFileName().toLowerCase());
+						document.setField("fileName", dto.getFileName());
 
 					if (dto.getApiResource() != null)
 						document.setField("apiResource.resourceUrl", dto.getApiResource().getResourceUrl());
 					if (dto.getApiResource().getMethodName() != null)
-						document.setField("apiResource.methodName", dto.getApiResource().getMethodName().toLowerCase());
-					if (dto.getResponseFields() != null) {
-						document.setField("apiResource.methodName_tags", dto.getApiResource().getTags().stream()
-								.map(s -> s.toLowerCase()).collect(Collectors.toList()));
+						document.setField("apiResource.methodName", dto.getApiResource().getMethodName());
+
+					if (dto.getApiResource().getTags() != null) {
+						document.setField("apiResource.methodName_tags", dto.getApiResource().getTags());
 					}
-					if (dto.getApiResource().getSummary() != null)
-						document.setField("apiResource.summary", dto.getApiResource().getSummary().toLowerCase());
+
+					if (dto.getApiResource().getSummary() != null) {
+						document.setField("apiResource.summary", dto.getApiResource().getSummary());
+					}
+					if (dto.getApiResource().getMeataData() != null)
+						document.setField("apiResource.metadata", dto.getApiResource().getMeataData().toString());
+
 					if (dto.getApiResource().getOperationId() != null)
-						document.setField("apiResource.operationId",
-								dto.getApiResource().getOperationId().toLowerCase());
+						document.setField("apiResource.operationId", dto.getApiResource().getOperationId());
 					if (dto.getApiResource().getDescription() != null)
-						document.setField("apiResource.description",
-								dto.getApiResource().getDescription().toLowerCase());
+						document.setField("apiResource.description", dto.getApiResource().getDescription());
 
 					if (dto.getRequestFields() != null) {
-						document.setField("requestFields", dto.getResponseFields().stream().map(s -> s.toLowerCase())
-								.collect(Collectors.toList()));
+						document.setField("requestFields", dto.getRequestFields());
 					}
 					if (dto.getHeaderFields() != null) {
-						document.setField("headerFields",
-								dto.getHeaderFields().stream().map(s -> s.toLowerCase()).collect(Collectors.toList()));
+						document.setField("headerFields", dto.getHeaderFields());
 					}
 					if (dto.getQueryFields() != null) {
-						document.setField("queryFields",
-								dto.getQueryFields().stream().map(s -> s.toLowerCase()).collect(Collectors.toList()));
+						document.setField("queryFields", dto.getQueryFields());
 					}
 					if (dto.getPathFields() != null) {
-						document.setField("pathFields",
-								dto.getPathFields().stream().map(s -> s.toLowerCase()).collect(Collectors.toList()));
+						document.setField("pathFields", dto.getPathFields());
 					}
-					if (dto.getPathFields() != null) {
-						document.setField("allFields",
-								dto.getAllFields().stream().map(s -> s.toLowerCase()).collect(Collectors.toList()));
+					if (dto.getAllFields() != null) {
+						document.setField("allFields", dto.getAllFields());
 					}
-					//httpSolrClient.add(document);
-					//httpSolrClient.commit();
+					httpSolrClient.add(document);
+					httpSolrClient.commit();
 				} catch (Exception e) {
 					logger.info("Not able to index Solr Documents = {} ", e);
 				}

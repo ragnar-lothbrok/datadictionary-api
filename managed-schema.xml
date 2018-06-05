@@ -124,6 +124,7 @@
       <tokenizer class="solr.WhitespaceTokenizerFactory"/>
       <filter class="solr.WordDelimiterFilterFactory" catenateNumbers="1" generateNumberParts="1" splitOnCaseChange="1" generateWordParts="1" splitOnNumerics="0" preserveOriginal="1" catenateAll="1" catenateWords="1"/>
       <filter class="solr.LowerCaseFilterFactory"/>
+      <filter class="solr.StopFilterFactory"/>
       <filter class="solr.EdgeNGramFilterFactory" maxGramSize="25" minGramSize="3"/>
       <filter class="solr.KStemFilterFactory"/>
     </analyzer>
@@ -131,36 +132,48 @@
       <tokenizer class="solr.WhitespaceTokenizerFactory"/>
       <filter class="solr.WordDelimiterFilterFactory" catenateNumbers="1" generateNumberParts="1" splitOnCaseChange="1" generateWordParts="1" splitOnNumerics="0" preserveOriginal="0" catenateAll="0" catenateWords="1"/>
       <filter class="solr.LowerCaseFilterFactory"/>
+      <filter class="solr.StopFilterFactory"/>
+      <filter class="solr.KStemFilterFactory"/>
+    </analyzer>
+  </fieldType>
+  
+   <fieldType name="string_tags" class="solr.TextField" autoGeneratePhraseQueries="false" omitNorms="true">
+    <analyzer type="index">
+      <tokenizer class="solr.WhitespaceTokenizerFactory"/>
+      <filter class="solr.LowerCaseFilterFactory"/>
+      <filter class="solr.KStemFilterFactory"/>
+    </analyzer>
+    <analyzer type="query">
+      <tokenizer class="solr.WhitespaceTokenizerFactory"/>
+      <filter class="solr.LowerCaseFilterFactory"/>
       <filter class="solr.KStemFilterFactory"/>
     </analyzer>
   </fieldType>
 
-   
-    
     
     <!-- Dictionary Fields STARTED -->
     
     <field name="title" type="text_ws_sd" indexed="true" stored="true" docValues="false" />
     <field name="description" type="text_ws_sd" indexed="true" stored="true" docValues="false" />
-    <field name="baseUrl" type="string" indexed="true" stored="true" docValues="false" />
-    <field name="host" type="string" indexed="true" stored="true" docValues="false" />
-    <field name="responseFields" type="string"  indexed="true"  stored="true" multiValued="true"/>
+    <field name="baseUrl" type="string_tags" indexed="true" stored="true" docValues="false" />
+    <field name="host" type="string_tags" indexed="true" stored="true" docValues="false" />
+    <field name="responseFields" type="string_tags"  indexed="true"  stored="true" multiValued="true"/>
     <field name="swaggerdocId" type="string" indexed="true" stored="true" docValues="false" />
     <field name="fileName" type="string" indexed="true" stored="true" docValues="false" />
-    <field name="requestFields" type="string"  indexed="true"  stored="true" multiValued="true"/>
-    <field name="headerFields" type="string"  indexed="true"  stored="true" multiValued="true"/>
-    <field name="queryFields" type="string"  indexed="true"  stored="true" multiValued="true"/>
-    <field name="pathFields" type="string"  indexed="true"  stored="true" multiValued="true"/>
-    <field name="allFields" type="string"  indexed="true"  stored="true" multiValued="true"/>
+    <field name="requestFields" type="string_tags"  indexed="true"  stored="true" multiValued="true"/>
+    <field name="headerFields" type="string_tags"  indexed="true"  stored="true" multiValued="true"/>
+    <field name="queryFields" type="string_tags"  indexed="true"  stored="true" multiValued="true"/>
+    <field name="pathFields" type="string_tags"  indexed="true"  stored="true" multiValued="true"/>
+    <field name="allFields" type="string_tags"  indexed="true"  stored="true" multiValued="true"/>
     
     
     <field name="apiResource.metadata" type="text_ws_sd" indexed="true" stored="true" docValues="false" />
-    <field name="apiResource.resourceUrl" type="string" indexed="true" stored="true" docValues="false" />
-    <field name="apiResource.methodName" type="string" indexed="true" stored="true" docValues="false" />
-    <dynamicField name="*_tags" type="string"  indexed="true"  stored="true" multiValued="true"/>
+    <field name="apiResource.resourceUrl" type="string_tags" indexed="true" stored="true" docValues="false" />
+    <field name="apiResource.methodName" type="string_tags" indexed="true" stored="true" docValues="false" />
+    <dynamicField name="*_tags" type="string_tags"  indexed="true"  stored="true" multiValued="true"/>
 	<field name="apiResource.summary" type="text_ws_sd" indexed="true" stored="true" docValues="false" />
 	<field name="apiResource.description" type="text_ws_sd" indexed="true" stored="true" docValues="false" />
-	<field name="apiResource.operationId" type="string" indexed="true" stored="true" docValues="false" />
+	<field name="apiResource.operationId" type="string_tags" indexed="true" stored="true" docValues="false" />
     
     
     <!-- FINISHED -->

@@ -32,14 +32,14 @@ public class ApiResource implements Serializable, Cloneable {
 	@JsonIgnore
 	private Set<String> pathFields = new HashSet<>();
 
-	private String meataData;
+	private StringBuilder meataData = new StringBuilder();
 
 	public ApiResource() {
 
 	}
 
 	public ApiResource(String resourceUrl, String methodName, List<String> tags, String summary, String description,
-			String operationId, String meataData) {
+			String operationId, StringBuilder meataData) {
 		super();
 		this.resourceUrl = resourceUrl;
 		this.methodName = methodName;
@@ -145,11 +145,11 @@ public class ApiResource implements Serializable, Cloneable {
 		this.pathFields = pathFields;
 	}
 
-	public String getMeataData() {
+	public StringBuilder getMeataData() {
 		return meataData;
 	}
 
-	public void setMeataData(String meataData) {
+	public void setMeataData(StringBuilder meataData) {
 		this.meataData = meataData;
 	}
 
