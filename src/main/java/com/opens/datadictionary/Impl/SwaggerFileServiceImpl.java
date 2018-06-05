@@ -8,6 +8,8 @@ import java.net.MalformedURLException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -24,8 +26,6 @@ import org.springframework.core.io.UrlResource;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.opens.datadictionary.constants.APIEndpoints;
 import com.opens.datadictionary.exceptions.GenericException;
 import com.opens.datadictionary.exceptions.InvalidSwaggerFileException;
@@ -65,7 +65,9 @@ public class SwaggerFileServiceImpl implements SwaggerFileService {
 		try {
 			if (file != null) {
 				String uuid = UUID.randomUUID().toString();
-				String fileName = uuid + "-" + file.getOriginalFilename();
+				String fileName = uuid + "~"
+						+ LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd-HH-mm-ss-SSS")) + "~"
+						+ file.getOriginalFilename();
 				Files.copy(file.getInputStream(), this.rootLocation.resolve(fileName));
 
 				String swaggerContent = getDataFromFile(file.getInputStream());
@@ -89,7 +91,7 @@ public class SwaggerFileServiceImpl implements SwaggerFileService {
 
 	}
 
-	public Swagger validateValidSwaggerFile(String content) {
+	private Swagger validateValidSwaggerFile(String content) {
 		Swagger swagger = null;
 		try {
 			swagger = swaggerParser.parse(content);
@@ -109,7 +111,7 @@ public class SwaggerFileServiceImpl implements SwaggerFileService {
 	 * @param input
 	 * @return
 	 */
-	public String getDataFromFile(InputStream input) {
+	private String getDataFromFile(InputStream input) {
 		StringBuilder fileContent = new StringBuilder();
 		BufferedReader reader = null;
 		try {
@@ -134,18 +136,13 @@ public class SwaggerFileServiceImpl implements SwaggerFileService {
 		return fileContent.toString();
 	}
 
-	@Override
-	public List<String> search(SearchRequest searchRequest) {
-		Map<String, List<String>> filenameIdMap = solrSearchService.search(searchRequest);
-		return contructSwagger(filenameIdMap);
-	}
-
-	public Swagger getSearchedSwagger(Entry<String, List<String>> entry) {
+	private Swagger getSearchedSwagger(Entry<String, List<String>> entry) {
+		Swagger swagger = null;
 		try {
 			Resource resource = loadFile(entry.getKey());
 			if (resource != null) {
 				String content = getDataFromFile(resource.getInputStream());
-				Swagger swagger = swaggerParser.parse(content);
+				swagger = swaggerParser.parse(content);
 				List<String> retainEndPoints = new ArrayList<>();
 				for (String endPoints : entry.getValue()) {
 					String splits[] = endPoints.split(APIEndpoints.SEPERATOR);
@@ -156,36 +153,14 @@ public class SwaggerFileServiceImpl implements SwaggerFileService {
 					}
 				}
 				swagger.getPaths().keySet().retainAll(retainEndPoints);
-				return swagger;
 			}
 		} catch (Exception e) {
 			logger.error("Exception occured while selecting search data form swagger = {}", e);
 		}
-		return null;
+		return swagger;
 	}
 
-	public List<String> contructSwagger(Map<String, List<String>> filenameIdMap) {
-		List<String> swaggers = new ArrayList<String>();
-		try {
-			if (filenameIdMap != null) {
-				for (Entry<String, List<String>> entry : filenameIdMap.entrySet()) {
-					Swagger swagger = getSearchedSwagger(entry);
-					if (swagger != null) {
-						ObjectMapper mapper = new ObjectMapper();
-						mapper.setSerializationInclusion(Include.NON_NULL);
-						String parsedSwagger = mapper.writeValueAsString(swagger);
-						logger.info("Swagger parsed = {}", parsedSwagger);
-						swaggers.add(parsedSwagger);
-					}
-				}
-			}
-		} catch (Exception e) {
-			logger.error("Exception occured while creating swagger from file = {}", e);
-		}
-		return swaggers;
-	}
-
-	public Resource loadFile(String filename) {
+	private Resource loadFile(String filename) {
 		try {
 			Path file = rootLocation.resolve(filename);
 			Resource resource = new UrlResource(file.toUri());
@@ -211,28 +186,6 @@ public class SwaggerFileServiceImpl implements SwaggerFileService {
 	}
 
 	@Override
-	public String searchOneDoc(SearchRequest searchRequest) {
-		try {
-			Map<String, List<String>> filenameIdMap = solrSearchService.search(searchRequest);
-			if (filenameIdMap != null) {
-				for (Entry<String, List<String>> entry : filenameIdMap.entrySet()) {
-					Swagger swagger = getSearchedSwagger(entry);
-					if (swagger != null) {
-						ObjectMapper mapper = new ObjectMapper();
-						mapper.setSerializationInclusion(Include.NON_NULL);
-						String parsedSwagger = mapper.writeValueAsString(swagger);
-						logger.info("Swagger parsed = {}", parsedSwagger);
-						return parsedSwagger;
-					}
-				}
-			}
-		} catch (Exception e) {
-			logger.error("Exception occured while creating swagger from file = {}", e);
-		}
-		return null;
-	}
-
-	@Override
 	public List<Swagger> searchSwaggers(SearchRequest searchRequest) {
 		Map<String, List<String>> filenameIdMap = solrSearchService.search(searchRequest);
 		List<Swagger> swaggers = new ArrayList<>();
@@ -249,6 +202,38 @@ public class SwaggerFileServiceImpl implements SwaggerFileService {
 			logger.error("Exception occured while selecting search data form swagger = {}", e);
 		}
 		return swaggers;
+	}
+
+	@Override
+	public List<SwaggerDetail> uploadHistory() {
+		List<SwaggerDetail> swaggerDetails = new ArrayList<>();
+		List<String> files = solrSearchService.uploadedFiles();
+		for (String filename : files) {
+			try {
+				Resource resource = loadFile(filename);
+				if (resource != null) {
+					String content = getDataFromFile(resource.getInputStream());
+					String split[] = filename.split("~");
+					swaggerDetails.add(new SwaggerDetail(split[0], filename, content, split[1]));
+				}
+			} catch (Exception e) {
+				logger.error("Exception occured while loading file history = {} ", e);
+			}
+		}
+		return swaggerDetails;
+	}
+
+	@Override
+	public String getFilePath(String fileName) {
+		try {
+			Path file = rootLocation.resolve(fileName);
+			if (file != null) {
+				return file.toAbsolutePath().toString();
+			}
+		} catch (Exception e) {
+			logger.error("Exception occured while loading file history = {} ", e);
+		}
+		throw new GenericException("File not found.");
 	}
 
 }

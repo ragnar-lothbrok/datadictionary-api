@@ -38,6 +38,16 @@ public class SolrDocumentDto implements Serializable, Cloneable {
 
 	private String fileName;
 
+	public boolean isActive() {
+		return active;
+	}
+
+	public void setActive(boolean active) {
+		this.active = active;
+	}
+
+	private boolean active = true;
+
 	public String getFileName() {
 		return fileName;
 	}

@@ -326,6 +326,7 @@ public class SolrIndexServiceImpl implements IndexService {
 					if (dto.getAllFields() != null) {
 						document.setField("allFields", dto.getAllFields());
 					}
+					document.setField("active", dto.isActive());
 					httpSolrClient.add(document);
 					httpSolrClient.commit();
 				} catch (Exception e) {

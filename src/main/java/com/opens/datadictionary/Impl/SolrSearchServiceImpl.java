@@ -29,9 +29,9 @@ public class SolrSearchServiceImpl implements SearchService {
 	private HttpSolrClient httpSolrClient;
 
 	@Override
-	public Map<String,List<String>> search(SearchRequest searchRequest) {
+	public Map<String, List<String>> search(SearchRequest searchRequest) {
 		logger.info("Search request is received in service = {} ", searchRequest);
-		Map<String,List<String>> filenameIdMap = new HashMap<String,List<String>>();
+		Map<String, List<String>> filenameIdMap = new HashMap<String, List<String>>();
 		try {
 			SolrQuery query = new SolrQuery();
 			query.set(CommonParams.ROWS, Integer.MAX_VALUE);
@@ -70,11 +70,11 @@ public class SolrSearchServiceImpl implements SearchService {
 
 			for (SolrDocument doc : docList) {
 				String fileName = doc.get("fileName").toString();
-				if(fileName != null) {
-					if(filenameIdMap.containsKey(fileName)) {
+				if (fileName != null) {
+					if (filenameIdMap.containsKey(fileName)) {
 						filenameIdMap.get(fileName).add(doc.get("id").toString());
-					}else {
-						filenameIdMap.put(fileName,new ArrayList<>());
+					} else {
+						filenameIdMap.put(fileName, new ArrayList<>());
 						filenameIdMap.get(fileName).add(doc.get("id").toString());
 					}
 				}
@@ -85,6 +85,29 @@ public class SolrSearchServiceImpl implements SearchService {
 			logger.error("Exception occured while searching in Solr = {} ", e);
 		}
 		return filenameIdMap;
+	}
+
+	@Override
+	public List<String> uploadedFiles() {
+		List<String> files = new ArrayList<>();
+		try {
+			SolrQuery query = new SolrQuery();
+			query.set(CommonParams.ROWS, Integer.MAX_VALUE);
+			String queryText = "*:*";
+			query.set("q", queryText);
+			query.setFields("fileName");
+			QueryResponse response = httpSolrClient.query(query);
+			SolrDocumentList docList = response.getResults();
+			for (SolrDocument doc : docList) {
+				String fileName = doc.get("fileName").toString();
+				if (fileName != null && !files.contains(fileName)) {
+					files.add(fileName);
+				}
+			}
+		} catch (Exception e) {
+			logger.error("Exception occured while getting uploaded swaggers = {} ", e);
+		}
+		return files;
 	}
 
 }
