@@ -1,5 +1,7 @@
 package com.opens.datadictionary.controller;
 
+import java.util.List;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -14,6 +16,8 @@ import org.springframework.web.bind.annotation.RestController;
 import com.opens.datadictionary.service.SwaggerFileService;
 import com.opens.datadictionary.solr.dtos.SearchRequest;
 
+import io.swagger.models.Swagger;
+
 @RestController
 @RequestMapping(com.opens.datadictionary.constants.APIEndpoints.SEARCH_BASE_URL)
 public class APISearchController {
@@ -24,10 +28,10 @@ public class APISearchController {
 	private SwaggerFileService swaggerFileService;
 
 	@RequestMapping(method = RequestMethod.POST)
-	public String searchAPI(@RequestBody SearchRequest searchRequest, HttpServletRequest request,
+	public List<Swagger> searchAPI(@RequestBody SearchRequest searchRequest, HttpServletRequest request,
 			HttpServletResponse response) {
 		LOGGER.info("Received search request = {} ", searchRequest);
-		return swaggerFileService.searchOneDoc(searchRequest);
+		return swaggerFileService.searchSwaggers(searchRequest);
 	}
 
 }

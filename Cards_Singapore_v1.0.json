@@ -1,0 +1,3368 @@
+ {
+	"swagger": "2.0",
+	"info": {
+		"title": "Cards APIs",
+		"description": "# Overview\n Card APIs provide functionalities to submit new  debit or credit card application; to retrieve cards, statements and application details; to block, unblock, activate card, and activate and deactivate card for overseas usage. \n\n# Version History\nVersion | Release date | Link to documentation\n--------|--------------|----------------------\nv1      | March, 2018   | Base version of API \n\n# Authentication\n<!-- ReDoc-Inject: <security-definitions> -->\n\n# Frequently Asked Question\nQ1: How to get list of active Credit/Debit/ATM card summary?\n\nAns: To get list of active Credit/Debit/ATM using **/parties/{partyId}/cards** with path parameters as party identifier.\n\nQ2: How to get unbilled transactions for given a card?\n\nAns: To get unbilled transactions for given a card using **/cards/{cardId}/unbilledTransactions** with query parameters as primary card identifier\n\nQ3: How to block multiple Credit/Debit/ATM card in a single request?\n\nAns: To block multiple Credit/Debit/ATM for any given card identifier using **/cards/block**\n\n# Known Issues\nThis API has no pending issues at the moment. Want to report a new issue? please help us [here](mailto:developers@dbs.com)\n\n# Throttling (Rate Limits)\nWe throttle our APIs by default to ensure maximum performance for all developers.\n\nBelow is more details to control API rate limits\n",
+		"version": "1.0",
+		"x-ChangeHistory:2018-02-08(Version 1.0)": "First release"
+	},
+	"host": "www.dbs.com/sandbox",
+	"schemes": [
+		"https"
+	],
+	"basePath": "/api/sg/v1",
+	"produces": [
+		"application/json"
+	],
+	"securityDefinitions": {
+     "accessToken": {
+      "description": "For accessing the API, a valid JWT token must be passed as part of the headers. You can obtain one through the authorization steps. Please go through the [How it Works](https://www.dbs.com/developers/#/get-started) section for more details.\n",
+      "type": "oauth2",
+      "authorizationUrl": "https://www.dbs.com/sandbox/api/sg/v1/oauth/authorize",
+      "tokenUrl": "https://www.dbs.com/sandbox/api/sg/v1/oauth/tokens",
+      "flow": "accessCode"
+	 }
+	},
+	"paths": {
+		"/debitCards/createApplication": {
+			"post": {
+				"summary": "Create debit card application",
+				"description": "Register for new debit card application",
+				"operationId": "applyDebitCard",
+				"parameters": [{
+						"name": "clientId",
+						"in": "header",
+						"description": "Client Identifier",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"name": "accessToken",
+						"in": "header",
+						"description": "Access Token",
+						"required": true,
+						"type": "string"
+					},
+					 {
+            "name": "accept-version",
+            "in": "header",
+            "description": "Specifies the acceptable version of the message set. If not specified, the latest version of the API will be considered. Example: 1.2",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "uuid",
+            "in": "header",
+            "description": "Message UID",
+            "required": true,
+            "type": "string"
+          },
+					{
+						"name": "debitCardApplication",
+						"in": "body",
+						"description": "Application Details",
+						"required": true,
+						"schema": {
+							"type": "object",
+							"properties": {
+								"debitCardApplication": {
+									"$ref": "#/definitions/debitCardApplication"
+								}
+							}
+						}
+					}
+				],
+				"tags": [
+					"Debit Card Application"
+				],
+				"responses": {
+					"201": {
+						"description": "Debit card application is successfully submitted",
+						"schema": {
+							"$ref": "#/definitions/debitCardCreation"
+						}
+					},
+					"400": {
+						"description": "Bad Request",
+						"schema": {
+							"$ref": "#/definitions/errorList"
+						}
+					},
+					"403": {
+						"description": "Forbidden",
+						"schema": {
+							"$ref": "#/definitions/errorList"
+						}
+					},
+					"404": {
+						"description": "Not Found",
+						"schema": {
+							"$ref": "#/definitions/errorList"
+						}
+					},
+					"500": {
+						"description": "Internal Server Error",
+						"schema": {
+							"$ref": "#/definitions/errorList"
+						}
+					}
+				}
+			}
+		},
+		"/parties/{partyId}/cards": {
+			"get": {
+				"tags": [
+					"Cards"
+				],
+				"summary": "Retrieve Card Summary",
+				"description": "Return list of active Credit/Debit/ATM cards for a  given party identifier.",
+				"parameters": [{
+						"name": "clientId",
+						"in": "header",
+						"description": "Client Identifier",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"name": "accessToken",
+						"in": "header",
+						"description": "Access Token",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"name": "accept-version",
+						"in": "header",
+						"description": "Specifies the acceptable version of the message set. If not specified, the latest version of the API will be considered. Example: 1.2",
+						"required": false,
+						"type": "string"
+					},
+					{
+						"name": "uuid",
+						"in": "header",
+						"description": "Message UID",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"name": "partyId",
+						"in": "path",
+						"description": "Tokenised Party Identifier",
+						"type": "string",
+						"required": true
+					},
+					{
+						"name": "cursor",
+						"in": "query",
+						"description": "Cursor for pagination. Example: 1",
+						"type": "string",
+						"required": false
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "List of cards is returned.",
+						"schema": {
+							"$ref": "#/definitions/cardList"
+						}
+					},
+					"403": {
+						"description": "Forbidden"
+					},
+					"404": {
+						"description": "Not Found"
+					},
+					"500": {
+						"description": "Internal Server Error",
+						"schema": {
+							"$ref": "#/definitions/error"
+						}
+					},
+					"503": {
+						"description": "Service Unavailable",
+						"schema": {
+							"$ref": "#/definitions/error"
+						}
+					}
+				}
+			}
+		},
+		"/cards/{cardId}": {
+			"get": {
+				"tags": [
+					"Cards"
+				],
+				"summary": "Retrieve Card Details",
+				"description": "Retrieve card details given a tokenized card identifier. Only Credit/Debit/ATM Cards are returned",
+				"operationId": "retrieveCardDetails",
+				"parameters": [{
+						"name": "clientId",
+						"in": "header",
+						"description": "Client Identifier",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"name": "accessToken",
+						"in": "header",
+						"description": "Access Token",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"name": "accept-version",
+						"in": "header",
+						"description": "Specifies the acceptable version of the message set. If not specified, the latest version of the API will be considered. Example: 1.2",
+						"required": false,
+						"type": "string"
+					},
+					{
+						"name": "uuid",
+						"in": "header",
+						"description": "Message UID",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"name": "cardId",
+						"in": "path",
+						"description": "Tokenised Card Identifier",
+						"type": "string",
+						"required": true
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Card details is returned.",
+						"schema": {
+							"$ref": "#/definitions/cardDetl"
+						}
+					},
+					"403": {
+						"description": "Forbidden"
+					},
+					"404": {
+						"description": "Not Found"
+					},
+					"500": {
+						"description": "Internal Server Error",
+						"schema": {
+							"$ref": "#/definitions/error"
+						}
+					},
+					"503": {
+						"description": "Service Unavailable",
+						"schema": {
+							"$ref": "#/definitions/error"
+						}
+					}
+				}
+			}
+		},
+		"/cards/block": {
+			"post": {
+				"tags": [
+					"Cards"
+				],
+				"summary": "Block card(s)",
+				"description": "Block a Credit/Debit/ATM card. More than one cards can be blocked in a single request.",
+				"operationId": "blockCard",
+				"parameters": [{
+						"name": "clientId",
+						"in": "header",
+						"description": "Client Identifier",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"name": "accessToken",
+						"in": "header",
+						"description": "Access token",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"name": "accept-version",
+						"in": "header",
+						"description": "Specifies the acceptable version of the message set. If not specified, the latest version of the API will be considered. Example: 1.2",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"name": "uuid",
+						"in": "header",
+						"description": "Message UID",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"name": "body",
+						"in": "body",
+						"description": "Cards",
+						"required": true,
+						"schema": {
+							"$ref": "#/definitions/cardBlock"
+						}
+					}
+				],
+				"responses": {
+					"201": {
+						"description": "Card(s) is successfully blocked except those highlighted",
+						"schema": {
+							"$ref": "#/definitions/blockResponse"
+						}
+					},
+					"400": {
+						"description": "Bad Request"
+					},
+					"403": {
+						"description": "Forbidden"
+					},
+					"404": {
+						"description": "Not Found"
+					},
+					"500": {
+						"description": "Internal Server Error",
+						"schema": {
+							"$ref": "#/definitions/errorList"
+						}
+					},
+					"503": {
+						"description": "Service Unavailable",
+						"schema": {
+							"$ref": "#/definitions/errorList"
+						}
+					}
+				}
+			}
+		},
+		"/cards/unblock": {
+			"post": {
+				"tags": [
+					"Cards"
+				],
+				"summary": "Unblock card(s)",
+				"description": "Unblock a Credit/Debit/ATM card. More than one cards can be unblocked in a single request",
+				"operationId": "unblockCard",
+				"parameters": [{
+						"name": "clientId",
+						"in": "header",
+						"description": "Client Identifier",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"name": "accessToken",
+						"in": "header",
+						"description": "Access token",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"name": "accept-version",
+						"in": "header",
+						"description": "Specifies the acceptable version of the message set. If not specified, the latest version of the API will be considered. Example: 1.2",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"name": "uuid",
+						"in": "header",
+						"description": "Message UID",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"name": "body",
+						"in": "body",
+						"description": "Cards",
+						"required": true,
+						"schema": {
+							"$ref": "#/definitions/cardUnblock"
+						}
+					}
+				],
+				"responses": {
+					"201": {
+						"description": "Card(s) is successfully unblocked except those highlighted",
+						"schema": {
+							"$ref": "#/definitions/unblockResponse"
+						}
+					},
+					"400": {
+						"description": "Bad Request"
+					},
+					"403": {
+						"description": "Forbidden"
+					},
+					"404": {
+						"description": "Not Found"
+					},
+					"500": {
+						"description": "Internal Server Error",
+						"schema": {
+							"$ref": "#/definitions/errorList"
+						}
+					},
+					"503": {
+						"description": "Service Unavailable",
+						"schema": {
+							"$ref": "#/definitions/errorList"
+						}
+					}
+				}
+			}
+		},
+		"/cards/replacement": {
+			"post": {
+				"tags": [
+					"Cards"
+				],
+				"summary": "Replace a card",
+				"description": "Replace or transfer a Credit/Debit/ATM card.",
+				"operationId": "replaceCard",
+				"parameters": [{
+						"name": "clientId",
+						"in": "header",
+						"description": "Client Identifier",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"name": "accessToken",
+						"in": "header",
+						"description": "Access token",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"name": "accept-version",
+						"in": "header",
+						"description": "Specifies the acceptable version of the message set. If not specified, the latest version of the API will be considered. Example: 1.2",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"name": "uuid",
+						"in": "header",
+						"description": "Message UID",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"name": "body",
+						"in": "body",
+						"description": "Cards",
+						"required": true,
+						"schema": {
+							"$ref": "#/definitions/cardReplacement"
+						}
+					}
+				],
+				"responses": {
+					"201": {
+						"description": "Card is successfully replaced",
+						"schema": {
+							"$ref": "#/definitions/replaceResponse"
+						}
+					},
+					"400": {
+						"description": "Bad Request"
+					},
+					"403": {
+						"description": "Forbidden"
+					},
+					"404": {
+						"description": "Not Found"
+					},
+					"500": {
+						"description": "Internal Server Error",
+						"schema": {
+							"$ref": "#/definitions/errorList"
+						}
+					},
+					"503": {
+						"description": "Service Unavailable",
+						"schema": {
+							"$ref": "#/definitions/errorList"
+						}
+					}
+				}
+			}
+		},
+
+		"/cards/{cardId}/cardActivation": {
+			"post": {
+				"summary": "Activate a card",
+				"description": "Activate a new Credit/Debit/ATM card.",
+				"operationId": "cardActivationAdd",
+				"tags": [
+					"Cards"
+				],
+				"parameters": [{
+						"name": "clientId",
+						"in": "header",
+						"description": "Client Identifier",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"name": "accessToken",
+						"in": "header",
+						"description": "Access token",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"name": "accept-version",
+						"in": "header",
+						"description": "Specifies the acceptable version of the message set. If not specified, the latest version of the API will be considered. Example: 1.2",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"name": "uuid",
+						"in": "header",
+						"description": "Message UID",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"name": "cardId",
+						"in": "path",
+						"description": "Tokenised Card Identifier",
+						"required": true,
+						"type": "string"
+					}
+
+				],
+				"responses": {
+					"201": {
+						"description": "Card is successfully activated"
+					},
+					"403": {
+						"description": "Forbidden"
+					},
+					"404": {
+						"description": "Not Found"
+					},
+					"500": {
+						"description": "Internal Server Error",
+						"schema": {
+							"$ref": "#/definitions/errorList"
+						}
+					},
+					"503": {
+						"description": "Service Unavailable",
+						"schema": {
+							"$ref": "#/definitions/errorList"
+						}
+					}
+				}
+			}
+		},
+		"/cards/{cardId}/overseasCardDeactivation": {
+			"post": {
+				"summary": "Deactivate a card for overseas usage",
+				"description": "Deactivate Credit/Debit card for overseas usage.",
+				"operationId": "overseasCardDeactivation",
+				"tags": [
+					"Cards"
+				],
+				"parameters": [{
+						"name": "clientId",
+						"in": "header",
+						"description": "Client Identifier",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"name": "accessToken",
+						"in": "header",
+						"description": "Access token",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"name": "accept-version",
+						"in": "header",
+						"description": "Specifies the acceptable version of the message set. If not specified, the latest version of the API will be considered. Example: 1.2",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"name": "uuid",
+						"in": "header",
+						"description": "Message UID",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"name": "cardId",
+						"in": "path",
+						"description": "Tokenised Card Identifier",
+						"required": true,
+						"type": "string"
+					}
+
+				],
+				"responses": {
+					"201": {
+						"description": "Card is successfully Deactivated for overseas usage."
+					},
+					"403": {
+						"description": "Forbidden"
+					},
+					"404": {
+						"description": "Not Found"
+					},
+					"500": {
+						"description": "Internal Server Error",
+						"schema": {
+							"$ref": "#/definitions/errorList"
+						}
+					},
+					"503": {
+						"description": "Service Unavailable",
+						"schema": {
+							"$ref": "#/definitions/errorList"
+						}
+					}
+				}
+			}
+		},
+		"/cards/{cardId}/overseasCardActivation": {
+			"post": {
+				"summary": "Activate a card for overseas usage",
+				"description": "Activate Credit/Debit card for overseas usage.",
+				"operationId": "overseasCardActivation",
+				"tags": [
+					"Cards"
+				],
+				"parameters": [{
+						"name": "clientId",
+						"in": "header",
+						"description": "Client Identifier",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"name": "accessToken",
+						"in": "header",
+						"description": "Access token",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"name": "accept-version",
+						"in": "header",
+						"description": "Specifies the acceptable version of the message set. If not specified, the latest version of the API will be considered. Example: 1.2",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"name": "uuid",
+						"in": "header",
+						"description": "Message UID",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"name": "cardId",
+						"in": "path",
+						"description": "Tokenised Card Identifier.",
+						"required": true,
+						"type": "string"
+					},
+
+					{
+						"name": "permanentActivation",
+						"in": "query",
+						"description": "Indicates if overseas usage is to be activated permanently or temporarily. 'TRUE' -Permanent Activation, 'FALSE'- Non-Permanent Activation.",
+						"type": "boolean"
+					},
+					{
+						"name": "startDate",
+						"in": "query",
+						"description": "Activation start date. Format is YYYYMMDD.",
+						"required": true,
+						"type": "string",
+						"format": "date"
+					},
+					{
+						"name": "endDate",
+						"in": "query",
+						"description": "Activation end date. Format is YYYYMMDD. This date is mandatory only for Non-Permanent Activation.",
+						"type": "string",
+						"format": "date"
+					}
+				],
+				"responses": {
+					"201": {
+						"description": "Card is successfully activated for Overseas usage"
+					},
+					"403": {
+						"description": "Forbidden"
+					},
+					"404": {
+						"description": "Not Found"
+					},
+					"500": {
+						"description": "Internal Server Error",
+						"schema": {
+							"$ref": "#/definitions/errorList"
+						}
+					},
+					"503": {
+						"description": "Service Unavailable",
+						"schema": {
+							"$ref": "#/definitions/errorList"
+						}
+					}
+				}
+			}
+		},
+		"/cards/{cardId}/availableStatementDates": {
+			"get": {
+				"summary": "Retrieve Card Statement Dates",
+				"description": "Return list of statement dates for retrieval of past statements.",
+				"operationId": "retrieveCardStatementDates",
+				"tags": [
+					"Cards"
+				],
+				"parameters": [{
+						"name": "clientId",
+						"in": "header",
+						"description": "Client Identifier",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"name": "accessToken",
+						"in": "header",
+						"description": "Access token",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"name": "accept-version",
+						"in": "header",
+						"description": "Specifies the acceptable version of the message set. If not specified, the latest version of the API will be considered. Example: 1.2",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"name": "uuid",
+						"in": "header",
+						"description": "Message UID",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"name": "cardId",
+						"in": "path",
+						"description": "Tokenised Card Identifier",
+						"required": true,
+						"type": "string"
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Statement dates are returned.",
+						"schema": {
+							"$ref": "#/definitions/availableStatementDate"
+						}
+					},
+					"400": {
+						"description": "Bad Request"
+					},
+					"403": {
+						"description": "Forbidden"
+					},
+					"404": {
+						"description": "Not Found"
+					},
+					"500": {
+						"description": "Internal Server Error",
+						"schema": {
+							"$ref": "#/definitions/errorList"
+						}
+					},
+					"503": {
+						"description": "Service Unavailable",
+						"schema": {
+							"$ref": "#/definitions/errorList"
+						}
+					}
+				}
+			}
+		},
+		"/cards/{cardId}/statementSummary": {
+			"get": {
+				"summary": "Retrieve Card Statement Summary",
+				"description": "Return card statement summary for a given card identifier and a statement date.",
+				"operationId": "retrieveCardStatementSummary",
+				"tags": [
+					"Cards"
+				],
+				"parameters": [{
+						"name": "clientId",
+						"in": "header",
+						"description": "Client Identifier",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"name": "accessToken",
+						"in": "header",
+						"description": "Access token",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"name": "accept-version",
+						"in": "header",
+						"description": "Specifies the acceptable version of the message set. If not specified, the latest version of the API will be considered. Example: 1.2",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"name": "uuid",
+						"in": "header",
+						"description": "Message UID",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"name": "cardId",
+						"in": "path",
+						"description": "Tokenised Card Identifier",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"name": "statementDate",
+						"in": "query",
+						"description": "Statement Date. Format is YYYY-MM-DD",
+						"required": true,
+						"type": "string",
+						"format": "date"
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Statement summary details are returned.",
+						"schema": {
+							"$ref": "#/definitions/statementSummary"
+						}
+					},
+					"400": {
+						"description": "Bad Request"
+					},
+					"403": {
+						"description": "Forbidden"
+					},
+					"404": {
+						"description": "Not Found"
+					},
+					"500": {
+						"description": "Internal Server Error",
+						"schema": {
+							"$ref": "#/definitions/errorList"
+						}
+					},
+					"503": {
+						"description": "Service Unavailable",
+						"schema": {
+							"$ref": "#/definitions/errorList"
+						}
+					}
+				}
+			}
+		},
+		"/cards/{cardId}/unbilledTransactions": {
+			"get": {
+				"summary": "Retrieve unbilled transactions. ",
+				"description": "Return unbilled transactions for given a card identifier.",
+				"operationId": "retrieveUnbilledTransactions",
+				"tags": [
+					"Cards"
+				],
+				"parameters": [{
+						"name": "clientId",
+						"in": "header",
+						"description": "Client Identifier",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"name": "accessToken",
+						"in": "header",
+						"description": "Access token",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"name": "accept-version",
+						"in": "header",
+						"description": "Specifies the acceptable version of the message set. If not specified, the latest version of the API will be considered. Example: 1.2",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"name": "uuid",
+						"in": "header",
+						"description": "Message UID",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"name": "cardId",
+						"in": "path",
+						"description": "Tokenised Card Identifier",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"name": "isPrimaryCard",
+						"in": "query",
+						"description": "Primary card indicator",
+						"required": true,
+						"type": "boolean"
+					},
+					{
+						"name": "cursor",
+						"in": "query",
+						"description": "Cursor for retrieving pending records",
+						"required": false,
+						"type": "string"
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Unbilled transactions are returned.",
+						"schema": {
+							"$ref": "#/definitions/unbilledTransactions"
+						}
+					},
+					"400": {
+						"description": "Bad Request"
+					},
+					"403": {
+						"description": "Forbidden"
+					},
+					"404": {
+						"description": "Not Found"
+					},
+					"500": {
+						"description": "Internal Server Error",
+						"schema": {
+							"$ref": "#/definitions/errorList"
+						}
+					},
+					"503": {
+						"description": "Service Unavailable",
+						"schema": {
+							"$ref": "#/definitions/errorList"
+						}
+					}
+
+				}
+			}
+		},
+		"/cards/application/submitApplication": {
+			"post": {
+				"summary": "Submit Card Application",
+				"description": "Submits Application for Principal/Supplementary Card",
+				"parameters": [{
+						"name": "clientId",
+						"in": "header",
+						"description": "Client Identifier",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"name": "accessToken",
+						"in": "header",
+						"description": "Access Token",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"name": "accept-version",
+						"in": "header",
+						"description": "Specifies the acceptable version of the message set. If not specified, the latest version of the API will be considered. Example: 1.2",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"name": "uuid",
+						"in": "header",
+						"description": "Message UID",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"name": "body",
+						"in": "body",
+						"description": "Application submission",
+						"required": true,
+						"schema": {
+							"$ref": "#/definitions/applicationSubmission"
+						}
+					}
+				],
+				"tags": [
+					"Credit Card Application"
+				],
+				"responses": {
+					"201": {
+						"description": "Card Application Submission",
+						"schema": {
+							"type": "object",
+							"properties": {
+								"applicationId": {
+									"description": "Application identifier",
+									"required": true,
+									"type": "string"
+								},
+								"applicationStatus": {
+									"description": "Application Status",
+									"$ref": "#/definitions/applicationStatus"
+								},
+								"cardId": {
+									"description": "Tokenised Card Identifier",
+									"type": "string"
+								},
+								"cardNumber": {
+									"$ref": "#/definitions/cardNumber"
+								},
+								"approvedLimit": {
+									"description": "Approved Credit Limit",
+									"type": "object",
+									"properties": {
+										"amount": {
+											"description": "Amount",
+											"type": "number"
+										},
+										"currency": {
+											"description": "Currency, three-character ISO-4217 code",
+											"type": "string"
+										}
+									},
+									"additionalProperties": false
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad Request"
+					},
+					"403": {
+						"description": "Forbidden"
+					},
+					"404": {
+						"description": "Not Found"
+					},
+					"500": {
+						"description": "Internal Server Error",
+						"schema": {
+							"$ref": "#/definitions/errorList"
+						}
+					},
+					"503": {
+						"description": "Service Unavailable",
+						"schema": {
+							"$ref": "#/definitions/errorList"
+						}
+					}
+				}
+			}
+		},
+		"/parties/{partyId}/cardApplication": {
+			"get": {
+				"summary": "Retrieve List of Card Applications",
+				"description": "Retrieves list of card applications belonging to a party",
+				"parameters": [{
+						"name": "clientId",
+						"in": "header",
+						"description": "Client Identifier",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"name": "accessToken",
+						"in": "header",
+						"description": "Access Token",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"name": "accept-version",
+						"in": "header",
+						"description": "Specifies the acceptable version of the message set. If not specified, the latest version of the API will be considered. Example: 1.2",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"name": "uuid",
+						"in": "header",
+						"description": "Message UID",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"name": "partyId",
+						"in": "path",
+						"description": "Tokenised party identifier",
+						"required": true,
+						"type": "string"
+					}
+				],
+				"tags": [
+					"Credit Card Application"
+				],
+				"responses": {
+					"200": {
+						"description": "List of card applications retrieved successfully",
+						"schema": {
+							"$ref": "#/definitions/cardApplicationList"
+						}
+					},
+					"400": {
+						"description": "Bad Request"
+					},
+					"403": {
+						"description": "Forbidden"
+					},
+					"404": {
+						"description": "Not Found"
+					},
+					"500": {
+						"description": "Internal Server Error",
+						"schema": {
+							"$ref": "#/definitions/errorList"
+						}
+					},
+					"503": {
+						"description": "Service Unavailable",
+						"schema": {
+							"$ref": "#/definitions/errorList"
+						}
+					}
+				}
+			}
+		},
+		"/cards/application/{applicationId}": {
+			"get": {
+				"summary": "Retrieve Card Application Detail",
+				"description": "Retrieves details of card application given an application identifier",
+				"parameters": [{
+						"name": "clientId",
+						"in": "header",
+						"description": "Client Identifier",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"name": "accessToken",
+						"in": "header",
+						"description": "Access Token",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"name": "accept-version",
+						"in": "header",
+						"description": "Specifies the acceptable version of the message set. If not specified, the latest version of the API will be considered. Example: 1.2",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"name": "uuid",
+						"in": "header",
+						"description": "Message UID",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"name": "applicationId",
+						"in": "path",
+						"description": "Application Identifier",
+						"required": true,
+						"type": "string"
+					}
+				],
+				"tags": [
+					"Credit Card Application"
+				],
+				"responses": {
+					"200": {
+						"description": "Card Application details retrieved successfully",
+						"schema": {
+							"$ref": "#/definitions/cardApplicationDetl"
+						}
+					},
+					"400": {
+						"description": "Bad Request"
+					},
+					"403": {
+						"description": "Forbidden"
+					},
+					"404": {
+						"description": "Not Found"
+					},
+					"500": {
+						"description": "Internal Server Error",
+						"schema": {
+							"$ref": "#/definitions/errorList"
+						}
+					},
+					"503": {
+						"description": "Service Unavailable",
+						"schema": {
+							"$ref": "#/definitions/errorList"
+						}
+					}
+				}
+			}
+		},
+		"/cards/{cardId}/statementTransactions": {
+			"get": {
+				"summary": "Retrieve Card Statement transactions",
+				"description": "Return transaction history of a given card identifier and a statement date.",
+				"operationId": "retrieveCardStatementTransactions",
+				"tags": [
+					"Cards"
+				],
+				"parameters": [{
+						"name": "clientId",
+						"in": "header",
+						"description": "Client Identifier",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"name": "accessToken",
+						"in": "header",
+						"description": "Access token",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"name": "accept-version",
+						"in": "header",
+						"description": "Specifies the acceptable version of the message set. If not specified, the latest version of the API will be considered. Example: 1.2",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"name": "uuid",
+						"in": "header",
+						"description": "Message UID",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"name": "cardId",
+						"in": "path",
+						"description": "Tokenised Card Identifier",
+						"required": true,
+						"type": "string"
+					},
+					{
+						"name": "statementDate",
+						"in": "query",
+						"description": "Statement Date. Format is YYYY-MM-DD",
+						"required": true,
+						"type": "string",
+						"format": "date"
+					},
+					{
+						"name": "cursor",
+						"in": "query",
+						"description": "Cursor",
+						"required": false,
+						"type": "string"
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Statement Transaction details are returned.",
+						"schema": {
+							"$ref": "#/definitions/statementTransactions"
+						}
+					},
+					"400": {
+						"description": "Bad Request"
+					},
+					"403": {
+						"description": "Forbidden"
+					},
+					"404": {
+						"description": "Not Found"
+					},
+					"503": {
+						"description": "Service Unavailable"
+					},
+					"500": {
+						"description": "Internal Server Error",
+						"schema": {
+							"$ref": "#/definitions/errorList"
+						}
+					}
+				}
+			}
+		}
+	},
+	"definitions": {
+		"unbilledTransactions": {
+			"description": "Unbilled transactions retrieved",
+			"type": "object",
+			"required": ["unbilledTransactionDetl"],
+			"properties": {
+				"unbilledTransactionDetl": {
+					"type": "array",
+					"items": {
+						"$ref": "#/definitions/unbilledTransactionDetl"
+					}
+				},
+				"recordControl": {
+					"$ref": "#/definitions/recordControl"
+				}
+			},
+			"additionalProperties": false
+		},
+		"unbilledTransactionDetl": {
+			"description": "Unbilled transaction details, maximum 50 records returned.",
+			"type": "object",
+			"required": ["transactionDate", "transactionDescription", "transactionAmount"],
+			"properties": {
+				"cardId": {
+					"description": "Card Identifier",
+					"type": "string"
+				},
+				"accountId": {
+					"description": "Account Identifier",
+					"type": "string"
+				},
+				"transactionDate": {
+					"description": "Transaction Date",
+					"type": "string",
+					"format": "date"
+				},
+				"postingDate": {
+					"description": "Posting Date",
+					"type": "string",
+					"format": "date"
+				},
+				"transactionDescription": {
+					"description": "Transaction Description",
+					"type": "string"
+				},
+				"transactionAmount": {
+					"description": "Transaction Amount",
+					"type": "object",
+					"properties": {
+						"amount": {
+							"description": "Amount",
+							"type": "number"
+						},
+						"currency": {
+							"description": "Currency, three-character ISO-4217 code",
+							"type": "string",
+							"maxLength": 3
+						}
+					},
+					"additionalProperties": false
+				},
+				"transactionType": {
+					"description": "Transaction type Example: Credit / Debit / Memo",
+					"type": "string"
+				},
+				"transactionCode": {
+					"description": "Transaction Code",
+					"type": "string"
+				},
+				"authorizationCode": {
+					"description": "Authorization Code or approval reference",
+					"type": "string"
+				},
+				"paymentMode": {
+					"description": "Possible values,<br> '1' - Contactless payment operation ,<br>'2' - Contact payment operation",
+					"type": "string"
+				},
+				"merchantId": {
+					"description": "Merchant Identifier",
+					"type": "string"
+				},
+				"merchantCategory": {
+					"description": "Merchant category",
+					"type": "string"
+				},
+				"planId": {
+					"description": "Credit Plan Identifier",
+					"type": "string"
+				}
+			},
+			"additionalProperties": false
+		},
+		"cardList": {
+			"type": "object",
+			"required": [
+				"cards"
+			],
+			"properties": {
+				"cards": {
+					"description": "List of cards belonging to a party",
+					"type": "array",
+					"items": {
+						"$ref": "#/definitions/card"
+					}
+				},
+				"recordControl": {
+					"$ref": "#/definitions/recordControl"
+				}
+			},
+			"additionalProperties": false
+		},
+		"card": {
+			"description": "Card",
+			"type": "object",
+			"properties": {
+				"creditCard": {
+					"$ref": "#/definitions/creditCard"
+				},
+				"debitCard": {
+					"$ref": "#/definitions/debitCard"
+				},
+				"bankCard": {
+					"$ref": "#/definitions/bankCard"
+				}
+			},
+			"additionalProperties": false
+		},
+		"cardDetl": {
+			"description": "Card details",
+			"type": "object",
+			"properties": {
+				"creditCard": {
+					"$ref": "#/definitions/creditCardDetl"
+				},
+				"debitCard": {
+					"$ref": "#/definitions/debitCardDetl"
+				},
+				"bankCard": {
+					"$ref": "#/definitions/bankCardDetl"
+				}
+			},
+			"additionalProperties": false
+		},
+		"creditCard": {
+			"description": "Credit Card summary",
+			"type": "object",
+			"properties": {
+				"id": {
+					"description": "Tokenised Card Identifier",
+					"type": "string"
+				},
+				"cardNumber": {
+					"description": "Card Number",
+					"type": "string",
+					"maxLength": 30
+				},
+				"cardBrand": {
+					"description": "Card Brand, eg. VISA, MasterCard, AMEX",
+					"type": "string",
+					"maxLength": 40
+				},
+				"cardDescription": {
+					"description": "Card Description",
+					"type": "string"
+				},
+				"nameOnCard": {
+					"description": "Name displayed on card",
+					"type": "string",
+					"maxLength": 120
+				},
+				"isPrimaryCard": {
+					"description": "Indicates if it is a primary card",
+					"type": "boolean"
+				},
+				"cardFace": {
+					"description": "Card face indicating the card design for specific group of customers",
+					"type": "string"
+				},
+				"issueDate": {
+					"description": "Card Issued Date, format is YYYY-MM-DD",
+					"type": "string",
+					"format": "date"
+				},
+				"activationDate": {
+					"description": "Card Activation Date, format is YYYY-MM-DD",
+					"type": "string",
+					"format": "date"
+				},
+				"cardExpiryDate": {
+					"$ref": "#/definitions/cardExpiryDate"
+				},
+				"creditLimit": {
+					"description": "Credit Limit",
+					"$ref": "#/definitions/amount"
+				},
+				"remainingLimit": {
+					"description": "Remaining Credit Limit",
+					"$ref": "#/definitions/amount"
+				},
+				"outstandingBalance": {
+					"description": "Outstanding Balance",
+					"$ref": "#/definitions/amount"
+				},
+				"cardStatus": {
+					"$ref": "#/definitions/cardStatus"
+				}
+			},
+			"additionalProperties": false
+		},
+		"debitCard": {
+			"description": "Debit Card summary",
+			"type": "object",
+			"properties": {
+				"id": {
+					"description": "Tokenised Card Identifier",
+					"type": "string"
+				},
+				"cardNumber": {
+					"description": "Card Number",
+					"type": "string",
+					"maxLength": 30
+				},
+				"cardBrand": {
+					"description": "Card Brand",
+					"type": "string"
+				},
+				"cardDescription": {
+					"description": "Card Description",
+					"type": "string"
+				},
+				"nameOnCard": {
+					"description": "Name displayed on card",
+					"type": "string",
+					"maxLength": 120
+				},
+				"cardFace": {
+					"description": "Card face indicating the card design for specific group of customers",
+					"type": "string"
+				},
+				"issueDate": {
+					"description": "Card Issued Date, format is YYYY-MM-DD",
+					"type": "string",
+					"format": "date"
+				},
+				"activationDate": {
+					"description": "Card Activation Date, format is YYYY-MM-DD",
+					"type": "string",
+					"format": "date"
+				},
+				"cardExpiryDate": {
+					"$ref": "#/definitions/cardExpiryDate"
+				},
+				"spendingLimit": {
+					"description": "Spending Limit",
+					"$ref": "#/definitions/amount"
+				},
+				"cardStatus": {
+					"$ref": "#/definitions/cardStatus"
+				}
+			},
+			"additionalProperties": false
+		},
+		"bankCard": {
+			"description": "Bankcard (ATM) summary",
+			"type": "object",
+			"properties": {
+				"id": {
+					"description": "Tokenised Card Identifier",
+					"type": "string"
+				},
+				"bankCardNumber": {
+					"description": "Card Number",
+					"type": "string",
+					"maxLength": 30
+				},
+				"cardDescription": {
+					"description": "Card Description",
+					"type": "string"
+				},
+				"nameOnCard": {
+					"description": "Name displayed on card",
+					"type": "string",
+					"maxLength": 120
+				},
+				"issueDate": {
+					"description": "Card Issued Date, format is YYYY-MM-DD",
+					"type": "string",
+					"format": "date"
+				},
+				"activationDate": {
+					"description": "Card Activation Date, format is YYYY-MM-DD",
+					"type": "string",
+					"format": "date"
+				},
+				"cardExpiryDate": {
+					"$ref": "#/definitions/cardExpiryDate"
+				},
+				"cardStatus": {
+					"$ref": "#/definitions/cardStatus"
+				}
+			},
+			"additionalProperties": false
+		},
+		"creditCardDetl": {
+			"description": "Credit Card details",
+			"type": "object",
+			"properties": {
+				"id": {
+					"description": "Tokenised Card Identifier",
+					"type": "string"
+				},
+				"cardNumber": {
+					"description": "Card Number",
+					"type": "string",
+					"maxLength": 30
+				},
+				"cardBrand": {
+					"description": "Card Brand, eg. VISA, MasterCard, AMEX",
+					"type": "string",
+					"maxLength": 40
+				},
+				"cardDescription": {
+					"description": "Card Description",
+					"type": "string"
+				},
+				"nameOnCard": {
+					"description": "Name displayed on card",
+					"type": "string",
+					"maxLength": 120
+				},
+				"isPrimaryCard": {
+					"description": "Indicates if it is a primary card",
+					"type": "boolean"
+				},
+				"cardFace": {
+					"description": "Card face indicating the card design for specific group of customers",
+					"type": "string"
+				},
+				"issueDate": {
+					"description": "Card Issued Date, format is YYYY-MM-DD",
+					"type": "string",
+					"format": "date"
+				},
+				"activationDate": {
+					"description": "Card Activation Date, format is YYYY-MM-DD",
+					"type": "string",
+					"format": "date"
+				},
+				"cardExpiryDate": {
+					"$ref": "#/definitions/cardExpiryDate"
+				},
+				"creditLimitDetl": {
+					"description": "Credit Limit details",
+					"type": "array",
+					"items": {
+						"$ref": "#/definitions/creditLimitDetl"
+					}
+				},
+				"outstandingBalance": {
+					"description": "Outstanding Balance",
+					"$ref": "#/definitions/amount"
+				},
+				"minimumDueAmount": {
+					"description": "Minimum Due Amount",
+					"$ref": "#/definitions/amount"
+				},
+				"paymentDueDate": {
+					"description": "Payment Due Date, format is YYYY-MM-DD",
+					"type": "string",
+					"format": "date"
+				},
+				"cardStatus": {
+					"$ref": "#/definitions/cardStatus"
+				},
+				"blockDetl": {
+					"$ref": "#/definitions/blockDetl"
+				},
+				"overseasActivationDetl": {
+					"description": "Overseas Activation Details",
+					"$ref": "#/definitions/overseasActivationDetl"
+				}
+			},
+			"additionalProperties": false
+		},
+		"debitCardDetl": {
+			"description": "Debit Card details",
+			"type": "object",
+			"properties": {
+				"id": {
+					"description": "Tokenised Card Identifier",
+					"type": "string"
+				},
+				"cardNumber": {
+					"description": "Card Number",
+					"type": "string",
+					"maxLength": 30
+				},
+				"cardBrand": {
+					"description": "Card Brand",
+					"type": "string"
+				},
+				"cardDescription": {
+					"description": "Card Description",
+					"type": "string"
+				},
+				"nameOnCard": {
+					"description": "Name displayed on card",
+					"type": "string",
+					"maxLength": 120
+				},
+				"cardFace": {
+					"description": "Card face indicating the card design for specific group of customers",
+					"type": "string"
+				},
+				"issueDate": {
+					"description": "Card Issued Date, format is YYYY-MM-DD",
+					"type": "string",
+					"format": "date"
+				},
+				"activationDate": {
+					"description": "Card Activation Date, format is YYYY-MM-DD",
+					"type": "string",
+					"format": "date"
+				},
+				"cardExpiryDate": {
+					"$ref": "#/definitions/cardExpiryDate"
+				},
+				"spendingLimitDetl": {
+					"description": "Spending limit details",
+					"type": "array",
+					"items": {
+						"$ref": "#/definitions/spendingLimitDetl"
+					}
+				},
+				"isOveseasUsageAllowed": {
+					"description": "Indicates if overseas usage is allowed",
+					"type": "boolean"
+				},
+				"overseasActivationDetl": {
+					"description": "Overseas Activation Details",
+					"$ref": "#/definitions/overseasActivationDetl"
+				},
+				"linkedAccounts": {
+					"description": "Deposit account(s) tagged to card",
+					"type": "array",
+					"items": {
+						"$ref": "#/definitions/linkedAccountDetl"
+					}
+				},
+				"cardStatus": {
+					"$ref": "#/definitions/cardStatus"
+				}
+			},
+			"additionalProperties": false
+		},
+		"bankCardDetl": {
+			"description": "Bankcard (ATM) details",
+			"type": "object",
+			"properties": {
+				"id": {
+					"description": "Tokenised Card Identifier",
+					"type": "string"
+				},
+				"cardNumber": {
+					"description": "Card Number",
+					"type": "string",
+					"maxLength": 30
+				},
+				"cardDescription": {
+					"description": "Card Description",
+					"type": "string"
+				},
+				"nameOnCard": {
+					"description": "Name displayed on card",
+					"type": "string",
+					"maxLength": 120
+				},
+				"issueDate": {
+					"description": "Card Issued Date, format is YYYY-MM-DD",
+					"type": "string",
+					"format": "date"
+				},
+				"activationDate": {
+					"description": "Card Activation Date, format is YYYY-MM-DD",
+					"type": "string",
+					"format": "date"
+				},
+				"cardExpiryDate": {
+					"$ref": "#/definitions/cardExpiryDate"
+				},
+				"isOveseasUsageAllowed": {
+					"description": "Indicates if overseas usage is allowed",
+					"type": "boolean"
+				},
+				"overseasActivationDetl": {
+					"description": "Overseas Activation Details",
+					"$ref": "#/definitions/overseasActivationDetl"
+				},
+				"linkedAccounts": {
+					"description": "Deposit account(s) tagged to card",
+					"type": "array",
+					"items": {
+						"$ref": "#/definitions/linkedAccountDetl"
+					}
+				},
+				"cardStatus": {
+					"$ref": "#/definitions/cardStatus"
+				}
+			},
+			"additionalProperties": false
+		},
+		"cardStatus": {
+			"description": "Card Status",
+			"type": "string"
+		},
+		"cardExpiryDate": {
+			"description": "Card Expiry Date, format is mmyyyy",
+			"type": "string",
+			"maxLength": 6
+		},
+		"linkedAccountDetl": {
+			"description": "Linked account detail",
+			"type": "object",
+			"properties": {
+				"accountId": {
+					"description": "Tokenised Account Identifier",
+					"type": "string"
+				},
+				"accountNumber": {
+					"description": "Account linked to debit card / Bankcard, not applicable to credit card",
+					"type": "string"
+				},
+				"isPrimary": {
+					"description": "Indicates if it is a primary account",
+					"type": "boolean"
+				}
+			},
+			"additionalProperties": false
+		},
+		"cardBlock": {
+			"type": "object",
+			"required": ["cardBlockList"],
+			"properties": {
+				"cardBlockList": {
+					"description": "List of cards to block",
+					"type": "array",
+					"items": {
+						"$ref": "#/definitions/cardToBlock"
+					}
+				}
+			},
+			"additionalProperties": false
+		},
+		"cardToBlock": {
+			"type": "object",
+			"required": ["cardId", "blockStatus", "blockReason"],
+			"properties": {
+				"cardId": {
+					"description": "Card Identifier",
+					"type": "string"
+				},
+				"blockStatus": {
+					"description": "Block Code/Status",
+					"type": "string"
+				},
+				"blockReason": {
+					"description": "Reason for blocking",
+					"type": "string",
+					"enum": ["LOST", "STOLEN", "FRAUD", "COUNTERFEIT", "VIP STATUS", "CREDIT RISK", "UNAUTHORIZED USE", "PICKUP CARD", "OTHER"]
+				},
+				"followupAction": {
+					"description": "Follow up Action to be taken, mandatory for Visa card.Refer mapping for valid values for specific blockReason",
+					"type": "string",
+					"enum": ["REFER", "PICKUP", "DECLINE", "PICKUP(FRAUD OR COUNTERFEIT)", "PICKUP (LOST)", "PICKUP (STOLEN)", "FORWRD/APPROVE", "FORWRD/DECLINE", "VIP HANDLING"]
+				},
+				"CRBRegion": {
+					"description": "Card Recovery Bulletin region code,mandatory for Visa card. Valid values are: 0. A-F and X-Z",
+					"type": "string"
+				}
+			},
+			"additionalProperties": false
+		},
+		"blockResponse": {
+			"type": "object",
+			"required": ["unblockCards"],
+			"properties": {
+				"unblockCards": {
+					"description": "List of unsuccessful card blocks",
+					"type": "array",
+					"items": {
+						"$ref": "#/definitions/unblockCard"
+					}
+				}
+			},
+			"additionalProperties": false
+		},
+		"unblockCard": {
+			"type": "object",
+			"properties": {
+				"cardId": {
+					"description": "Tokenised Card Identifier",
+					"type": "string"
+				},
+				"cardNumber": {
+					"$ref": "#/definitions/cardNumber"
+				},
+				"reason": {
+					"description": "Reason",
+					"type": "string",
+					"maxLength": 40
+				}
+			},
+			"additionalProperties": false
+		},
+		"cardUnblock": {
+			"type": "object",
+			"required": ["cardUnblockList"],
+			"properties": {
+				"cardUnblockList": {
+					"description": "List of cards to Unblock",
+					"type": "array",
+					"items": {
+						"$ref": "#/definitions/cardToUnblock"
+					}
+				}
+			},
+			"additionalProperties": false
+		},
+		"cardToUnblock": {
+			"type": "object",
+			"required": ["cardId"],
+			"properties": {
+				"cardId": {
+					"description": "Card Identifier",
+					"type": "string"
+				}
+			},
+			"additionalProperties": false
+		},
+		"unblockResponse": {
+			"type": "object",
+			"required": ["blockCards"],
+			"properties": {
+				"blockCards": {
+					"description": "List of unsuccessful card unblocks",
+					"type": "array",
+					"items": {
+						"$ref": "#/definitions/blockCard"
+					}
+				}
+			},
+			"additionalProperties": false
+		},
+		"blockCard": {
+			"type": "object",
+			"properties": {
+				"cardId": {
+					"description": "Tokenised Card Identifier",
+					"type": "string"
+				},
+				"cardNumber": {
+					"$ref": "#/definitions/cardNumber"
+				},
+				"reason": {
+					"description": "Reason",
+					"type": "string",
+					"maxLength": 40
+				}
+			},
+			"additionalProperties": false
+		},
+		"cardReplacement": {
+			"type": "object",
+			"required": ["cardId"],
+			"properties": {
+				"cardId": {
+					"description": "Card Identifier",
+					"type": "string"
+				},
+				"sameCardNumber": {
+					"description": "Retain pervious card number, applicable for Credit card or embossed Debit card.",
+					"type": "boolean"
+				},
+				"replaceReason": {
+					"description": "Reason for replacement",
+					"type": "string",
+					"enum": ["LOST_OR_STOLEN", "RETAINED", "NON_RECEIPT_OF_CARD_AND_PIN", "NON_RECEIPT_OF_CARD", "FORGOTTEN_OR_LOST_PIN", "FRAUD", "DAMAGED_ACTIVE_CARD", "DAMAGED_BLOCKED_CARD"]
+				},
+				"isExpressReplacement": {
+					"description": "Express replace option for delivery",
+					"type": "boolean"
+				}
+			},
+			"additionalProperties": false
+		},
+		"replaceResponse": {
+			"type": "object",
+			"required": ["cardNumber"],
+			"properties": {
+				"cardId": {
+					"description": "Tokenised Card Identifier",
+					"type": "string"
+				},
+				"cardNumber": {
+					"$ref": "#/definitions/cardNumber"
+				},
+				"expiryDate": {
+					"description": "Indicate new card expiry date",
+					"type": "string",
+					"format": "date"
+				}
+			},
+			"additionalProperties": false
+		},
+		"cardApplicationList": {
+			"description": "Card Application List",
+			"type": "object",
+			"properties": {
+				"applicationId": {
+					"description": "Application Identifier",
+					"type": "string"
+				},
+				"isPrimaryCard": {
+					"description": "Indicates if primary card",
+					"type": "boolean"
+				},
+				"applicationType": {
+					"description": "Application Type<br>NEWCC=New Credit Card,<br> ADDNL=Additional Credit Card,<br> NEWEDC=New Embossed Debit Card",
+					"required": true,
+					"enum": ["NEWCC", "ADDNL", "NEWEDC"],
+					"type": "string"
+				},
+				"applicationDate": {
+					"description": "Date of Application",
+					"type": "string"
+				},
+				"applicationReference": {
+					"description": "Application reference",
+					"type": "string"
+				},
+				"applicationStatus": {
+					"description": "Application Status",
+					"$ref": "#/definitions/applicationStatus"
+				}
+			}
+		},
+		"cardApplicationDetl": {
+			"description": "Card Application Details",
+			"type": "object",
+			"properties": {
+				"applicationReference": {
+					"description": "Application Reference",
+					"type": "string"
+				},
+				"applicationType": {
+					"description": "Application Type<br>NEWCC=New Credit Card,<br> ADDNL=Additional Credit Card,<br> NEWEDC=New Embossed Debit Card, <br>NEWCL=New Cashline",
+					"required": true,
+					"enum": ["NEWCC", "ADDNL", "NEWEDC", "NEWCL"],
+					"type": "string"
+				},
+				"applicationDate": {
+					"description": "Date of Application",
+					"type": "string"
+				},
+				"productId": {
+					"description": "Unique Identifier for a specific product. This is available via retrieval of eligible products API",
+					"type": "string"
+				},
+				"isPrimaryCard": {
+					"description": "Indicates if it is primary card",
+					"type": "boolean"
+				},
+				"applicationStatus": {
+					"description": "Application Status",
+					"$ref": "#/definitions/applicationStatus"
+				},
+				"applicantDetl": {
+					"description": "Applicant details",
+					"$ref": "#/definitions/applicantDetl"
+				}
+			}
+		},
+		"phoneDetl": {
+			"description": "Phone Details",
+			"type": "object",
+			"required": [
+				"phoneNumber"
+			],
+			"properties": {
+				"phoneType": {
+					"description": "Telephone type. Example: Home, Office, Mobile, Fax. Refer to Code reference for list of possible values. ",
+					"type": "string",
+					"maxLength": 8
+				},
+				"phoneCtryCode": {
+					"description": "Telephone country code",
+					"type": "string",
+					"maxLength": 8
+				},
+				"phoneAreaCode": {
+					"description": "Telephone area code",
+					"type": "string",
+					"maxLength": 10
+				},
+				"phoneNumber": {
+					"description": "Telephone number",
+					"type": "string",
+					"maxLength": 30
+				}
+			},
+			"additionalProperties": false
+		},
+		"employmentDetl": {
+			"description": "employee",
+			"type": "object",
+			"required": [
+				"isCurrentEmployment"
+			],
+			"properties": {
+				"isCurrentEmployment": {
+					"description": "Indicates current or previous employment",
+					"type": "boolean"
+				},
+				"employmentStatus": {
+					"description": "Status of Employment. Example: Employee, Self Employed. Refer to Common Codes API for the list of values.",
+					"type": "string"
+				},
+				"employerName": {
+					"description": "Employer Name",
+					"type": "string"
+				},
+				"employmentPeriod": {
+					"description": "Period of employment",
+					"type": "array",
+					"items": {
+						"$ref": "#/definitions/employmentPeriod"
+					}
+				},
+				"monthlyIncome": {
+					"description": "Monthly Income",
+					"$ref": "#/definitions/amount"
+				},
+				"annualIncome": {
+					"description": "Gross Annual Income",
+					"$ref": "#/definitions/amount"
+				},
+				"variableIncome": {
+					"description": "Variable Income",
+					"$ref": "#/definitions/amount"
+				},
+				"jobTitle": {
+					"description": "Job Title",
+					"type": "string"
+				},
+				"industryType": {
+					"description": "Industry Type",
+					"type": "string"
+				}
+			},
+			"additionalProperties": false
+		},
+		"employmentPeriod": {
+			"description": "Period of Employment",
+			"type": "object",
+			"properties": {
+				"numberOfYears": {
+					"description": "Number of Years",
+					"type": "number"
+				},
+				"numberOfMonths": {
+					"description": "Number of Months",
+					"type": "number"
+				}
+			},
+			"additionalProperties": false
+		},
+		"addressDetl": {
+			"description": "Address details",
+			"type": "object",
+			"properties": {
+				"addressType": {
+					"description": "Address Type. Example: MAIL, RES, WORK, etc.",
+					"type": "string"
+				},
+				"addressLine1": {
+					"description": "Address line 1",
+					"required": true,
+					"type": "string",
+					"maxLength": 40
+				},
+				"addressLine2": {
+					"description": "Address line 2",
+					"required": true,
+					"type": "string",
+					"maxLength": 40
+				},
+				"addressLine3": {
+					"description": "Address line 3",
+					"type": "string",
+					"maxLength": 40
+				},
+				"addressLine4": {
+					"description": "Address line 4",
+					"type": "string",
+					"maxLength": 40
+				},
+				"building": {
+					"description": "Building name",
+					"type": "string"
+				},
+				"block": {
+					"description": "Block number",
+					"required": true,
+					"type": "string"
+				},
+				"level": {
+					"description": "Level number",
+					"required": true,
+					"type": "string"
+				},
+				"unit": {
+					"description": "Unit number",
+					"required": true,
+					"type": "string"
+				},
+				"postalCode": {
+					"description": "Postal code/zip",
+					"required": true,
+					"type": "string"
+				},
+				"estate": {
+					"description": "Estate",
+					"type": "string"
+				},
+				"city": {
+					"description": "City",
+					"type": "string"
+				},
+				"country": {
+					"description": "Country Code. ISO 3166-1 alpha-2 Country Code",
+					"type": "string",
+					"maxLength": 3
+				}
+			},
+			"additionalProperties": false
+		},
+		"applicationSubmission": {
+			"description": "Application submission details",
+			"type": "object",
+			"required": [
+				"cardDetl", "applicantDetl"
+			],
+			"properties": {
+				"applicationReference": {
+					"description": "Application Reference",
+					"type": "string"
+				},
+				"cardDetl": {
+					"description": "Card Details",
+					"$ref": "#/definitions/cardDetail"
+				},
+				"applicantDetl": {
+					"description": "Applicant Details",
+					"$ref": "#/definitions/applicantDetl"
+				}
+			},
+			"additionalProperties": false
+		},
+		"applicationStatus": {
+			"description": "Application Status",
+			"type": "string",
+			"enum": ["Approved", "Pending", "Declined"]
+		},
+		"cardDetail": {
+			"description": "Card Application Details",
+			"type": "object",
+			"properties": {
+				"productType": {
+					"description": "Product Type. Example: CRCARD, DRCARD.",
+					"required": true,
+					"type": "string"
+				},
+				"productId": {
+					"description": "Unique Identifier for a specific product. This is available via retrieval of eligible products API",
+					"type": "string"
+				},
+				"applicationType": {
+					"description": "Application Type<br>NEWCC=New Credit Card,<br> ADDNL=Additional Credit Card,<br> NEWEDC=New Embossed Debit Card",
+					"required": true,
+					"enum": ["NEWCC", "ADDNL", "NEWEDC"],
+					"type": "string"
+				},
+				"isPrimaryCard": {
+					"description": "Indicates if it is primary card",
+					"type": "boolean"
+				},
+				"nameOnCard": {
+					"description": "Name On Card",
+					"type": "string"
+				}
+			},
+			"additionalProperties": false
+		},
+		"applicantDetl": {
+			"description": "Applicant Details",
+			"type": "object",
+			"required": [
+				"partyId", "partyName"
+			],
+			"properties": {
+				"partyId": {
+					"description": "Tokenized Party Identifier",
+					"type": "string"
+				},
+				"partyDoc": {
+					"description": "Details of party's identification documents",
+					"type": "array",
+					"maxItems": 2,
+					"items": {
+						"$ref": "#/definitions/partyDoc"
+					}
+				},
+				"partyName": {
+					"$ref": "#/definitions/applicantName"
+				},
+				"dateOfBirth": {
+					"description": "Date of Birth",
+					"type": "string",
+					"format": "date"
+				},
+				"gender": {
+					"description": "Gender",
+					"type": "string"
+				},
+				"maritalStatus": {
+					"description": "Marital Status",
+					"type": "string"
+				},
+				"isPermanentResident": {
+					"description": "Indicates if applicant is permanent resident",
+					"type": "boolean"
+				},
+				"nationality": {
+					"description": "Nationality. ISO 3166-1 alpha-2 Country Code",
+					"type": "string",
+					"maxLength": 3
+				},
+				"numberOfDependents": {
+					"description": "Number of dependants",
+					"type": "integer"
+				},
+				"addressDetl": {
+					"description": "Address details",
+					"type": "array",
+					"items": {
+						"$ref": "#/definitions/addressDetl"
+					}
+				},
+				"residenceType": {
+					"description": "Residence Type",
+					"type": "string"
+				},
+				"ownership": {
+					"description": "Ownership of property. Example: 01 - Self Owned, 02 - Mortgaged. Refer to Common Codes API for the list of values",
+					"type": "string"
+				},
+				"phoneDetl": {
+					"description": "Party's phone details",
+					"type": "array",
+					"items": {
+						"$ref": "#/definitions/phoneDetl"
+					}
+				},
+				"emailAddress": {
+					"description": "Party's email address",
+					"type": "string"
+				},
+				"educationLevel": {
+					"description": "Highest Level of Education. Example: University, Diploma. Refer to Common Codes API for the list of values",
+					"type": "string"
+				},
+				"employmentDetl": {
+					"description": "employee details",
+					"type": "array",
+					"items": {
+						"$ref": "#/definitions/employmentDetl"
+					}
+				},
+				"campaignId": {
+					"description": "Campaign Identifier",
+					"type": "string"
+				}
+			}
+		},
+		"applicantName": {
+			"description": "Applicant Name",
+			"type": "object",
+			"required": ["fullName"],
+			"properties": {
+				"fullName": {
+					"description": "Party's FullName",
+					"type": "string"
+				},
+				"salutation": {
+					"description": "Salutation",
+					"type": "string"
+				}
+			},
+			"additionalProperties": false
+		},
+		"partyDoc": {
+			"description": "Party Documents",
+			"type": "object",
+			"properties": {
+				"docType": {
+					"description": "Document Type",
+					"type": "string"
+				},
+				"docNumber": {
+					"description": "Document Number",
+					"type": "string"
+				}
+			},
+			"additionalProperties": false
+		},
+		"cardNumber": {
+			"description": "Card Number",
+			"type": "string",
+			"maxLength": 30
+		},
+		"errorList": {
+			"description": "List of errors",
+			"type": "array",
+			"items": {
+				"$ref": "#/definitions/error"
+			}
+		},
+		"error": {
+			"type": "object",
+			"properties": {
+				"code": {
+					"description": "Error code",
+					"type": "string"
+				},
+				"message": {
+					"type": "string",
+					"description": "Error message"
+				},
+				"moreInfo": {
+					"type": "string",
+					"description": "Link to provide more information about the error"
+				}
+			}
+		},
+		"autoTopUpDetl": {
+			"description": "Auto TopUp details",
+			"type": "object",
+			"properties": {
+				"accountId": {
+					"description": "Tokenised Account Identifier",
+					"type": "string"
+				},
+				"linkedAccountNumber": {
+					"description": "Deposit account number linked to Cashline account",
+					"type": "string"
+				},
+				"topUpAmount": {
+					"description": "TopUp Amount",
+					"$ref": "#/definitions/amount"
+				},
+				"minimumBalance": {
+					"description": "Minimum balance in deposit account before auto topUp occurs",
+					"$ref": "#/definitions/amount"
+				}
+			},
+			"additionalProperties": false
+		},
+		"blockDetl": {
+			"type": "object",
+			"properties": {
+				"blockStatuses": {
+					"description": "Block Status",
+					"type": "array",
+					"maxItems": 2,
+					"items": {
+						"$ref": "#/definitions/blockStatus"
+					}
+				}
+			},
+			"additionalProperties": false
+		},
+		"blockStatus": {
+			"description": "Block Status",
+			"type": "string",
+			"maxLength": 1
+		},
+		"spendingLimitDetl": {
+			"description": "Spending limit details",
+			"type": "object",
+			"properties": {
+				"spendingLimit": {
+					"description": "Spending Limit",
+					"type": "object",
+					"properties": {
+						"amount": {
+							"description": "Amount",
+							"type": "number"
+						},
+						"currency": {
+							"description": "Currency Type. ISO 4217 3-character currency code",
+							"type": "string",
+							"maxLength": 3
+						}
+					},
+					"additionalProperties": false
+				},
+				"isPermanent": {
+					"description": "Indicates if it is a permanent limit",
+					"type": "boolean"
+				},
+				"effectiveDate": {
+					"description": "Effective Date, format is YYYY-MM-DD.  This field is applicable when defining new spending limit.",
+					"$ref": "#/definitions/effectiveDate"
+				},
+				"expiryDate": {
+					"description": "Expiry Date, format is YYYY-MM-DD.  This field is applicable when defining new spending limit.",
+					"$ref": "#/definitions/expiryDate"
+				}
+			},
+			"additionalProperties": false
+		},
+		"creditLimitDetl": {
+			"description": "Credit Limit details",
+			"type": "object",
+			"properties": {
+				"creditLimit": {
+					"description": "Total Credit Limit including temporary credit limit (if any)",
+					"type": "object",
+					"properties": {
+						"amount": {
+							"description": "Amount",
+							"type": "number"
+						},
+						"currency": {
+							"description": "Currency Type. ISO 4217 3-character currency code",
+							"type": "string",
+							"maxLength": 3
+						}
+					},
+					"additionalProperties": false
+				},
+				"remainingLimit": {
+					"description": "Remaining Credit Limit",
+					"type": "object",
+					"properties": {
+						"amount": {
+							"description": "Amount",
+							"type": "number"
+						},
+						"currency": {
+							"description": "Currency Type. ISO 4217 3-character currency code",
+							"type": "string"
+						}
+					},
+					"additionalProperties": false
+				},
+				"permanentCreditLimit": {
+					"description": "Permanent Credit Limit",
+					"type": "object",
+					"properties": {
+						"amount": {
+							"description": "Amount",
+							"type": "number"
+						},
+						"currency": {
+							"description": "Currency Type. ISO 4217 3-character currency code",
+							"type": "string",
+							"maxLength": 3
+						}
+					},
+					"additionalProperties": false
+				},
+				"temporaryCreditLimitDetl": {
+					"description": "Temporary Credit Limit details",
+					"type": "object",
+					"properties": {
+						"temporaryCreditLimit": {
+							"description": "Temporary Credit Limit",
+							"type": "object",
+							"properties": {
+								"amount": {
+									"description": "Amount",
+									"type": "number"
+								},
+								"currency": {
+									"description": "Currency Type. ISO 4217 3-character currency code",
+									"type": "string",
+									"maxLength": 3
+								}
+							},
+							"additionalProperties": false
+						},
+						"effectiveDate": {
+							"description": "Effective Date, format is YYYY-MM-DD",
+							"$ref": "#/definitions/effectiveDate"
+						},
+						"expiryDate": {
+							"description": "Expiry Date, format is YYYY-MM-DD",
+							"$ref": "#/definitions/expiryDate"
+						}
+					},
+					"additionalProperties": false
+				}
+			},
+			"additionalProperties": false
+		},
+		"overseasActivationDetl": {
+			"description": "Overseas Activation Details",
+			"type": "object",
+			"properties": {
+				"startDate": {
+					"description": "Start Date, format is YYYY-MM-DD",
+					"type": "string",
+					"format": "date"
+				},
+				"endDate": {
+					"description": "End date, format is YYYY-MM-DD",
+					"type": "string",
+					"format": "date"
+				},
+				"isPermanent": {
+					"description": "Indicates permanent activation for overseas usage",
+					"type": "boolean"
+				}
+			},
+			"additionalProperties": false
+		},
+		"effectiveDate": {
+			"description": "Effective Date, format is YYYY-MM-DD ",
+			"type": "string",
+			"format": "date"
+		},
+		"expiryDate": {
+			"description": "Expiry Date, format is YYYY-MM-DD",
+			"type": "string",
+			"format": "date"
+		},
+		"amount": {
+			"type": "object",
+			"properties": {
+				"amount": {
+					"type": "number",
+					"format": "double"
+				},
+				"currency": {
+					"description": "Currency Type. ISO 4217 3-character currency code",
+					"type": "string",
+					"maxLength": 3
+				}
+			},
+			"additionalProperties": false
+		},
+		"availableStatementDate": {
+			"type": "array",
+			"items": {
+				"$ref": "#/definitions/statementDates"
+			}
+		},
+		"statementDates": {
+			"description": "Available Statement dates",
+			"type": "object",
+			"required": ["statementDate"],
+			"properties": {
+				"statementDate": {
+					"description": "Statement Date. Format is YYYY-MM-DD.",
+					"type": "string",
+					"format": "date"
+				}
+			},
+			"additionalProperties": false
+		},
+		"statementSummary": {
+			"description": "statement Summary",
+			"type": "object",
+			"properties": {
+				"summary": {
+					"$ref": "#/definitions/summary"
+				}
+			},
+			"additionalProperties": false
+		},
+		"summary": {
+			"description": "statement Summary details",
+			"type": "object",
+			"properties": {
+				"cardNumber": {
+					"description": "Card Number",
+					"type": "string"
+				},
+				"currentAmountDue": {
+					"description": "Amount due for current statement",
+					"type": "object",
+					"properties": {
+						"amount": {
+							"description": "Amount",
+							"type": "number"
+						},
+						"currency": {
+							"description": "Currency, three-character ISO-4217 code",
+							"type": "string"
+						}
+					},
+					"additionalProperties": false
+				},
+				"paymentDueDate": {
+					"description": "Payment due date",
+					"type": "string",
+					"format": "date"
+				},
+				"amountPastDue": {
+					"description": "Amount overdue from previous statement",
+					"type": "object",
+					"properties": {
+						"amount": {
+							"description": "Amount",
+							"type": "number"
+						},
+						"currency": {
+							"description": "Currency, three-character ISO-4217 code",
+							"type": "string"
+						}
+					},
+					"additionalProperties": false
+				},
+				"totalAmountDue": {
+					"description": "Total amount due, including current balance",
+					"type": "object",
+					"properties": {
+						"amount": {
+							"description": "Amount",
+							"type": "number"
+						},
+						"currency": {
+							"description": "Currency, three-character ISO-4217 code",
+							"type": "string"
+						}
+					},
+					"additionalProperties": false
+				},
+				"totalInterestAmount": {
+					"description": "Total Interest Amount Charged in this cycle",
+					"type": "object",
+					"properties": {
+						"amount": {
+							"description": "Amount",
+							"type": "number"
+						},
+						"currency": {
+							"description": "Currency, three-character ISO-4217 code",
+							"type": "string"
+						}
+					},
+					"additionalProperties": false
+				},
+				"directDebitAmount": {
+					"description": "Giro deduction amount",
+					"type": "object",
+					"properties": {
+						"amount": {
+							"description": "Amount",
+							"type": "number"
+						},
+						"currency": {
+							"description": "Currency, three-character ISO-4217 code",
+							"type": "string"
+						}
+					},
+					"additionalProperties": false
+				},
+				"beginingBalance": {
+					"description": "Beginning balance",
+					"type": "object",
+					"properties": {
+						"amount": {
+							"description": "Amount",
+							"type": "number"
+						},
+						"currency": {
+							"description": "Currency, three-character ISO-4217 code",
+							"type": "string"
+						}
+					},
+					"additionalProperties": false
+				},
+				"totalNumberOfDebits": {
+					"description": "Total number of debits ",
+					"type": "integer"
+				},
+				"totalDebitAmount": {
+					"description": "Cycle to date debit amount",
+					"type": "object",
+					"properties": {
+						"amount": {
+							"description": "Amount",
+							"type": "number"
+						},
+						"currency": {
+							"description": "Currency, three-character ISO-4217 code",
+							"type": "string"
+						}
+					},
+					"additionalProperties": false
+				},
+				"totalNumberOfCredits": {
+					"description": "Total number of credits ",
+					"type": "integer"
+				},
+				"totalCreditAmount": {
+					"description": "Cycle to date credit amount",
+					"type": "object",
+					"properties": {
+						"amount": {
+							"description": "Amount",
+							"type": "number"
+						},
+						"currency": {
+							"description": "Currency, three-character ISO-4217 code",
+							"type": "string"
+						}
+					},
+					"additionalProperties": false
+				},
+				"currentBalance": {
+					"description": "Cycle to date closing balance amount ",
+					"type": "object",
+					"properties": {
+						"amount": {
+							"description": "Amount",
+							"type": "number"
+						},
+						"currency": {
+							"description": "Currency, three-character ISO-4217 code",
+							"type": "string"
+						}
+					},
+					"additionalProperties": false
+				},
+				"creditLimit": {
+					"description": "Credit limit ",
+					"type": "object",
+					"properties": {
+						"amount": {
+							"description": "Amount",
+							"type": "number"
+						},
+						"currency": {
+							"description": "Currency, three-character ISO-4217 code",
+							"type": "string"
+						}
+					},
+					"additionalProperties": false
+				},
+				"remainingLimit": {
+					"description": "Remaining limit ",
+					"type": "object",
+					"properties": {
+						"amount": {
+							"description": "Amount",
+							"type": "number"
+						},
+						"currency": {
+							"description": "Currency, three-character ISO-4217 code",
+							"type": "string"
+						}
+					},
+					"additionalProperties": false
+				},
+				"billingCycle": {
+					"description": "Billing Cycle day",
+					"type": "number"
+				},
+				"previousPoints": {
+					"description": "Reward Points brought forwarded from previous cycles",
+					"type": "number"
+				},
+				"newPointsEarned": {
+					"description": "Reward Points  earned in this cycle ",
+					"type": "number"
+				},
+				"redeemedPoints": {
+					"description": "Reward Points  redeemed in this cycle ",
+					"type": "number"
+				},
+				"adjustedPoints": {
+					"description": "Reward Points adjusted in this cycle ",
+					"type": "number"
+				},
+				"currentPoints": {
+					"description": "Total points available to redeem  ",
+					"type": "number"
+				}
+			},
+			"additionalProperties": false
+		},
+		"eligibleProductsList": {
+			"description": "List of Eligible Products",
+			"type": "array",
+			"items": {
+				"description": "Details of Eligible Products for a given customer. Supported products are cards, cashline",
+				"type": "object",
+				"properties": {
+					"products": {
+						"description": "List of Eligible Products",
+						"type": "object",
+						"properties": {
+							"productType": {
+								"description": "Product Type",
+								"type": "string"
+							},
+							"cardType": {
+								"description": "Code to represent the type of card",
+								"type": "string"
+							},
+							"cardBrand": {
+								"description": "Type of card",
+								"type": "string"
+							},
+							"cardName": {
+								"description": "Name of card",
+								"type": "string"
+							},
+							"annualFee": {
+								"description": "Annual Fee",
+								"type": "object",
+								"properties": {
+									"amount": {
+										"description": "Amount",
+										"type": "number"
+									},
+									"currency": {
+										"description": "Currency, three-character ISO-4217 code",
+										"type": "string",
+										"maxLength": 3
+									}
+								},
+								"additionalProperties": false
+							},
+							"annualFeeWaiverDuration": {
+								"description": "Annual Fee Waiver duration",
+								"type": "string"
+							},
+							"minIncomeLocal": {
+								"description": "Minimum Income of Local resident",
+								"type": "object",
+								"properties": {
+									"amount": {
+										"description": "Amount",
+										"type": "number"
+									},
+									"currency": {
+										"description": "Currency, three-character ISO-4217 code",
+										"type": "string",
+										"maxLength": 3
+									}
+								},
+								"additionalProperties": false
+							},
+							"minIncomeForeigner": {
+								"description": "Minimum Income of Foreigner",
+								"type": "object",
+								"properties": {
+									"amount": {
+										"description": "Amount",
+										"type": "number"
+									},
+									"currency": {
+										"description": "Currency, three-character ISO-4217 code",
+										"type": "string",
+										"maxLength": 3
+									}
+								},
+								"additionalProperties": false
+							}
+						},
+						"additionalProperties": false
+					}
+				}
+			}
+		},
+		"cardType": {
+			"description": "Type of card, eg. DEBIT, CREDIT",
+			"type": "string",
+			"maxLength": 20
+		},
+		"cardBrand": {
+			"description": "Card Brand, eg. VISA, MasterCard, AMEX",
+			"type": "string",
+			"maxLength": 40
+		},
+		"statementTransactions": {
+			"description": "statement transactions",
+			"type": "object",
+			"required": ["statementTransactionDetl"],
+			"properties": {
+				"transactionDetl": {
+					"type": "array",
+					"items": {
+						"$ref": "#/definitions/statementTransactionDetl"
+					}
+				},
+				"recordControl": {
+					"$ref": "#/definitions/recordControl"
+				}
+			},
+			"additionalProperties": false
+		},
+		"statementTransactionDetl": {
+			"description": "statement transactions",
+			"type": "object",
+			"required": ["statementDate"],
+			"properties": {
+				"cardProductType": {
+					"description": "Card Product type",
+					"type": "string"
+				},
+				"cardType": {
+					"description": "Card type",
+					"type": "string"
+				},
+				"cardNumber": {
+					"description": "Card Number",
+					"type": "string"
+				},
+				"transactionDate": {
+					"description": "Transaction effective date",
+					"type": "string",
+					"format": "date"
+				},
+				"postingDate": {
+					"description": "Transaction posting date",
+					"type": "string",
+					"format": "date"
+				},
+				"transactionDescription": {
+					"description": "Transaction Description",
+					"type": "string"
+				},
+				"transactionAmount": {
+					"description": "Transaction Amount",
+					"type": "object",
+					"properties": {
+						"amount": {
+							"description": "Amount",
+							"type": "number"
+						},
+						"currency": {
+							"description": "Currency, three-character ISO-4217 code",
+							"type": "string"
+						}
+					},
+					"additionalProperties": false
+				},
+				"transactionPlan": {
+					"description": "Transaction Plan -Retail,Cash...",
+					"type": "string"
+				},
+				"transactionPlanSeq": {
+					"description": "Transaction Plan Sequence number",
+					"type": "string"
+				},
+				"transactionAuthCode": {
+					"description": "Transaction Authorization code",
+					"type": "string"
+				},
+				"transactionType": {
+					"description": "Transaction Type -Credit ,Debit, Memo",
+					"type": "string"
+				},
+				"transactionCode": {
+					"description": "Transaction Code",
+					"type": "string"
+				},
+				"merchanId": {
+					"description": "Merchant Store ID",
+					"type": "string"
+				},
+				"merchanCat": {
+					"description": "Merchant Category code",
+					"type": "string"
+				},
+				"pointsEarned": {
+					"description": "Reward Points earned ",
+					"type": "number"
+				}
+			},
+			"additionalProperties": false
+		},
+		"recordControl": {
+			"description": "Record control information",
+			"type": "object",
+			"properties": {
+				"matchedRecordCount": {
+					"description": "Number of records matched",
+					"type": "integer"
+				},
+				"sentRecordCount": {
+					"description": "Number of records sent",
+					"type": "integer"
+				},
+				"cursor": {
+					"description": "Cursor for Processing pending records",
+					"type": "string"
+				}
+			}
+		},
+		"debitCardApplication": {
+			"description": "Debit Card Application",
+			"type": "object",
+			"required": [
+				"partyDetl",
+				"unembossedDebitCard"
+			],
+			"properties": {
+				"partyDetl": {
+					"description": "Party Details",
+					"$ref": "#/definitions/partyDetl"
+				},
+				"unembossedDebitCard": {
+					"description": "Unembossed Debit Card",
+					"$ref": "#/definitions/unembossedDebitCard"
+				},
+				"applicationReference": {
+					"description": "Application Reference",
+					"type": "string"
+				},
+				"channelId": {
+					"description": "Channel Identifier",
+					"type": "string"
+				}
+			},
+			"additionalProperties": false
+		},
+		"debitCardCreation": {
+			"description": "Create Debit Card application",
+			"type": "object",
+			"properties": {
+				"applicationStatus": {
+					"description": "Application Status. Example: 'PENDING', 'REJECTED', 'APPROVED'",
+					"type": "string",
+					"required": true
+				}
+			},
+			"additionalProperties": false
+		},
+		"applicationReference": {
+			"description": "Application Reference",
+			"type": "object",
+			"properties": {
+				"relatedApplnRef": {
+					"description": "Related application reference",
+					"type": "string"
+				},
+				"docsOnly": {
+					"description": "Indicates if only documents are added to an existing application",
+					"type": "boolean"
+				}
+			},
+			"additionalProperties": false
+		},
+		"unembossedDebitCard": {
+			"description": "Unembossed Debit Card",
+			"type": "object",
+			"properties": {
+				"cardBrand": {
+					"description": "Card Brand, Example: VISA, MasterCard, AMEX",
+					"type": "string"
+				},
+				"productId": {
+					"description": "Unique Identifier for a specific card",
+					"type": "string"
+				},
+				"productSubType": {
+					"description": "Product Sub Type, Example:04 - DBS VISA Debit Card, 06 - POSB Passion Debit Card, 07 - DBS UnionPay Debit Card ",
+					"type": "string"
+				},
+				"nameOnCard": {
+					"description": "Name reflected on Card",
+					"type": "string",
+					"required": true,
+					"maxLength": 19
+				},
+				"cardNumberToReplace": {
+					"description": "Current card number to be replaced",
+					"type": "string",
+					"maxLength": 30
+				},
+				"linkedAccounts": {
+					"description": "Linked to deposit account details",
+					"type": "array",
+					"items": {
+						"$ref": "#/definitions/linkedAccount"
+					},
+					"required": true
+				}
+			},
+			"additionalProperties": false
+		},
+		"linkedAccount": {
+			"description": "Linked Account Details",
+			"type": "object",
+			"properties": {
+				"productType": {
+					"description": "Product Type. Only selected Current/Savings accounts are supported, DBS Current Account, DBS Savings Account, POSB Savings Account, Multi-Currency Account, Foreign Currency Current Account",
+					"type": "string",
+					"enum": ["CA", "SA", "POSBSA", "MCA", "FCCA"]
+				},
+				"accountNumber": {
+					"description": "Account number",
+					"type": "string",
+					"maxLength": 20
+				},
+				"isPrimaryAccount": {
+					"description": "Indicates if it is a primary account",
+					"type": "boolean"
+				}
+			},
+			"additionalProperties": false
+		},
+		"partyDetl": {
+			"description": "Party details for the debit card application",
+			"type": "object",
+			"properties": {
+				"partyId": {
+					"description": "Party Identifier",
+					"type": "string"
+				},
+				"partyInternalId": {
+					"description": "Party internal Identifier",
+					"type": "string"
+				},
+				"salutation": {
+					"description": "Salutation",
+					"type": "string",
+					"maxLength": 10
+				},
+				"gender": {
+					"description": "Gender",
+					"type": "string",
+					"maxLength": 1
+				},
+				"nationality": {
+					"description": "Nationality",
+					"type": "string",
+					"maxLength": 40
+				},
+				"ethnicGroup": {
+					"description": "Ethnic Group",
+					"type": "string",
+					"maxLength": 20
+				},
+				"maritalStatus": {
+					"description": "Marital Status",
+					"type": "string",
+					"maxLength": 20
+				},
+				"educationLevel": {
+					"description": "Highest Level of Education. Example: 01 - University, 02 - Diploma, 03 - Pre-University, 04 - Secondary, 05 - Primary, 09 - Others",
+					"type": "string",
+					"maxLength": 20
+				},
+				"occupation": {
+					"description": "Occupation",
+					"type": "string"
+				},
+				"employmentStatus": {
+					"description": "Employment Status. Example: 01 - Employee, 02 - Self Employed, 03 - Variable / Commission Earner, 04 - Retired, 05 - Others",
+					"type": "string"
+				},
+				"annualIncome": {
+					"description": "Annual Income",
+					"$ref": "#/definitions/amount"
+				},
+				"residenceType": {
+					"description": "Type of residence. Example: 01 - HDB 1-Room, 02 - HDB 2-Room, 03 - HDB 3-Room, 04 - HDB 4-Room, 05 - HDB 5-Room, 06 - Shophouse, 07 - Condominium, Apartment 08 - Terrace, Simi-Detached, Bungalow, 99 - Others",
+					"type": "string"
+				},
+				"residenceOwnership": {
+					"description": "Ownership of residence. Example: 01 - Self owned, 02 - Mortgaged, 03 - Rented, 04 - Parent's, 05 - Employer's, 06 - Others",
+					"type": "string"
+				},
+				"phoneDetl": {
+					"description": "Party's phone details",
+					"type": "array",
+					"items": {
+						"$ref": "#/definitions/phone"
+					}
+				},
+				"emailAddress": {
+					"description": "Email address",
+					"type": "string",
+					"maxLength": 255
+				}
+			},
+			"additionalProperties": false
+		},
+		"phone": {
+			"description": "Phone",
+			"type": "object",
+			"properties": {
+				"phoneType": {
+					"description": "Telephone type. Refer to Code reference for list of possible values. ",
+					"type": "string",
+					"maxLength": 8
+				},
+				"phoneCtryCode": {
+					"description": "Telephone country code",
+					"type": "string",
+					"maxLength": 8
+				},
+				"phoneAreaCode": {
+					"description": "Telephone area code",
+					"type": "string",
+					"maxLength": 10
+				},
+				"phoneNumber": {
+					"description": "Telephone number",
+					"type": "string",
+					"maxLength": 30
+				}
+			},
+			"additionalProperties": false
+		},
+		"amount": {
+			"description": "Amount",
+			"type": "object",
+			"properties": {
+				"amount": {
+					"description": "Amount",
+					"type": "number"
+				},
+				"currency": {
+					"description": "Currency, three-character ISO-4217 code",
+					"type": "string",
+					"maxLength": 3
+				}
+			},
+			"additionalProperties": false
+		}
+	}
+};	  	
+	

@@ -90,10 +90,10 @@ public class SwaggerFileServiceImpl implements SwaggerFileService {
 	}
 
 	public Swagger validateValidSwaggerFile(String content) {
-		Swagger swagger =  null;
+		Swagger swagger = null;
 		try {
-			swagger =  swaggerParser.parse(content);
-			if(swagger == null) {
+			swagger = swaggerParser.parse(content);
+			if (swagger == null) {
 				throw new InvalidSwaggerFileException("Invalid swagger file");
 			}
 		} catch (Exception e) {
@@ -143,14 +143,14 @@ public class SwaggerFileServiceImpl implements SwaggerFileService {
 	public Swagger getSearchedSwagger(Entry<String, List<String>> entry) {
 		try {
 			Resource resource = loadFile(entry.getKey());
-			if(resource != null) {
+			if (resource != null) {
 				String content = getDataFromFile(resource.getInputStream());
 				Swagger swagger = swaggerParser.parse(content);
 				List<String> retainEndPoints = new ArrayList<>();
-				for(String endPoints : entry.getValue()) {
+				for (String endPoints : entry.getValue()) {
 					String splits[] = endPoints.split(APIEndpoints.SEPERATOR);
-					if(swagger.getPaths() != null && swagger.getPaths().size() > 0) {
-						if(swagger.getPaths().keySet().contains(splits[1])) {
+					if (swagger.getPaths() != null && swagger.getPaths().size() > 0) {
+						if (swagger.getPaths().keySet().contains(splits[1])) {
 							retainEndPoints.add(splits[1]);
 						}
 					}
@@ -159,7 +159,7 @@ public class SwaggerFileServiceImpl implements SwaggerFileService {
 				return swagger;
 			}
 		} catch (Exception e) {
-			logger.error("Exception occured while selecting search data form swagger = {}",e);
+			logger.error("Exception occured while selecting search data form swagger = {}", e);
 		}
 		return null;
 	}
@@ -170,7 +170,7 @@ public class SwaggerFileServiceImpl implements SwaggerFileService {
 			if (filenameIdMap != null) {
 				for (Entry<String, List<String>> entry : filenameIdMap.entrySet()) {
 					Swagger swagger = getSearchedSwagger(entry);
-					if(swagger != null) {
+					if (swagger != null) {
 						ObjectMapper mapper = new ObjectMapper();
 						mapper.setSerializationInclusion(Include.NON_NULL);
 						String parsedSwagger = mapper.writeValueAsString(swagger);
@@ -217,7 +217,7 @@ public class SwaggerFileServiceImpl implements SwaggerFileService {
 			if (filenameIdMap != null) {
 				for (Entry<String, List<String>> entry : filenameIdMap.entrySet()) {
 					Swagger swagger = getSearchedSwagger(entry);
-					if(swagger != null) {
+					if (swagger != null) {
 						ObjectMapper mapper = new ObjectMapper();
 						mapper.setSerializationInclusion(Include.NON_NULL);
 						String parsedSwagger = mapper.writeValueAsString(swagger);
@@ -230,6 +230,25 @@ public class SwaggerFileServiceImpl implements SwaggerFileService {
 			logger.error("Exception occured while creating swagger from file = {}", e);
 		}
 		return null;
+	}
+
+	@Override
+	public List<Swagger> searchSwaggers(SearchRequest searchRequest) {
+		Map<String, List<String>> filenameIdMap = solrSearchService.search(searchRequest);
+		List<Swagger> swaggers = new ArrayList<>();
+		try {
+			if (filenameIdMap != null) {
+				for (Entry<String, List<String>> entry : filenameIdMap.entrySet()) {
+					Swagger swagger = getSearchedSwagger(entry);
+					if (swagger != null) {
+						swaggers.add(swagger);
+					}
+				}
+			}
+		} catch (Exception e) {
+			logger.error("Exception occured while selecting search data form swagger = {}", e);
+		}
+		return swaggers;
 	}
 
 }

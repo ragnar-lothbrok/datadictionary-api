@@ -193,12 +193,28 @@ public class SolrIndexServiceImpl implements IndexService {
 				for (Entry<String, Property> entry : responseDef.getValue().getProperties().entrySet()) {
 					responseMap.get(responseDef.getKey()).add(entry.getKey());
 					if (entry.getValue() instanceof RefProperty) {
-						responseMap.get(responseDef.getKey()).addAll(responseMap.get(((RefProperty) entry.getValue())
-								.get$ref().substring(((RefProperty) entry.getValue()).get$ref().lastIndexOf("/") + 1)));
+						Set<String> values = responseMap.get(((RefProperty) entry.getValue())
+								.get$ref().substring(((RefProperty) entry.getValue()).get$ref().lastIndexOf("/") + 1));
+						if(values != null){
+							responseMap.get(responseDef.getKey()).addAll(values);
+						}
 					}
 				}
 			}
 		}
+		
+		for(Entry<String, Set<String>> resEntry : responseMap.entrySet()){
+			Set<String> values= new HashSet<String>();
+			for(String value : resEntry.getValue()){
+				values.add(value);
+				if(responseMap.get(value) != null){
+					values.addAll(responseMap.get(value));
+				}
+			}
+			responseMap.get(resEntry.getKey()).addAll(values);
+		}
+		
+		
 		return responseMap;
 	}
 
@@ -263,8 +279,8 @@ public class SolrIndexServiceImpl implements IndexService {
 						document.setField("allFields",
 								dto.getAllFields().stream().map(s -> s.toLowerCase()).collect(Collectors.toList()));
 					}
-					httpSolrClient.add(document);
-					httpSolrClient.commit();
+					//httpSolrClient.add(document);
+					//httpSolrClient.commit();
 				} catch (Exception e) {
 					logger.info("Not able to index Solr Documents = {} ", e);
 				}

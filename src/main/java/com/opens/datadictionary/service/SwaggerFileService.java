@@ -7,6 +7,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.opens.datadictionary.solr.dtos.SearchRequest;
 
+import io.swagger.models.Swagger;
+
 public interface SwaggerFileService {
 
 	public Resource loadFile(String filename);
@@ -16,4 +18,6 @@ public interface SwaggerFileService {
 	List<String> search(SearchRequest searchRequest);
 	
 	String searchOneDoc(SearchRequest searchRequest);
+	
+	List<Swagger> searchSwaggers(SearchRequest searchRequest);
 }
