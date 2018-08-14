@@ -20,6 +20,10 @@ stopworda
 stopwordb
 
 #Standard english stop words taken from Lucene's StopAnalyzer
+1
+2
+3
+4
 a
 an
 and
