@@ -20,7 +20,11 @@ stopworda
 stopwordb
 
 #Standard english stop words taken from Lucene's StopAnalyzer
-a
+g
+g
+tt
+yt
+uya
 an
 and
 are
